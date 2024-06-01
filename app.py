@@ -1,6 +1,8 @@
 import dash
 import dash_bootstrap_components as dbc
-from dash import html
+from dash import html, dcc
+
+from components.graph import fig
 
 app = dash.Dash(
     __name__,
@@ -12,7 +14,8 @@ app = dash.Dash(
 sidebar = html.Div(
     [
         html.Div(
-            [html.I(className="fa-solid fa-sliders me-2"), html.Span("Settings")],
+            [html.I(className="fa-solid fa-sliders me-2"),
+             html.Span("Settings")],
             className="sidebar-header",
         ),
         html.Hr(),
@@ -31,13 +34,8 @@ sidebar = html.Div(
 app.layout = html.Div(
     [
         sidebar,
-        html.Div(
-            [
-                dash.page_container
-            ],
-            className="content",
-        ),
-    ]
+        dcc.Graph(figure=fig, className='content')
+    ],
 )
 
 if __name__ == "__main__":
