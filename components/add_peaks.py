@@ -1,4 +1,4 @@
-from dash import Dash, dcc, html, Input, Output, ALL, Patch, callback
+from dash import Dash, dcc, html, Input, Output, ALL, Patch, callback, MATCH
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
@@ -18,7 +18,7 @@ peak_accordian = dmc.Accordion(
                 ),
                 dmc.AccordionPanel(
                     [
-                        dbc.Button("+ Add Peak", id="add-peak"),
+                        dbc.Button("+ Add Peak", id="add-peak", style={"width": "100%"}),
                         html.Hr()
                     ],
                     id="add-peak-accordian"
@@ -30,23 +30,48 @@ peak_accordian = dmc.Accordion(
 )
 
 
-def peak_options():
-    return html.Div(
-        [
-            html.Div(
+def peak_options(n_clicks):
+    return dmc.Accordion(
+        children=[
+            dmc.AccordionItem(
                 [
-                    html.P("Peak Center:", style={"margin-top": 10}),
-                    dbc.Input(type="number", style={"width": 100, "margin-left": 20}, className="sidebar-input", id="peak-center")
+                    dmc.AccordionControl(f"Peak {n_clicks}", id={"type": "peak-set-name", "index": n_clicks}),
+                    dmc.AccordionPanel(
+                        [
+                            html.Div(
+                                [
+                                    dbc.Input(placeholder=f"Peak {n_clicks}", type="text", id={"type": "peak-edit-name", "index": n_clicks}),
+                                    dbc.Button(DashIconify(icon="ph:pencil-thin"), disabled=True)
+                                ],
+                                className="accordian-options"
+                            ),
+                            html.Div(
+                                [
+                                    html.P("Peak Center:", style={"margin-top": 10}),
+                                    dbc.Input(type="number", value=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "peak-center", "index": n_clicks})
+                                ],
+                                className="accordian-options"
+                            ),
+                            html.Div(
+                                [
+                                    html.P("Peak Height:", style={"margin-top": 10}),
+                                    dbc.Input(type="number", value=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "peak-height", "index": n_clicks})
+                                ],
+                                className="accordian-options"
+                            ),
+                            html.Div(
+                                [
+                                    html.P("Peak Width:", style={"margin-top": 10}),
+                                    dbc.Input(type="number", value=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "peak-width", "index": n_clicks})
+                                ],
+                                className="accordian-options"
+                            )
+                        ],
+                        id="test",
+                    ),
                 ],
-                style={"display": "flex", "justify-content": "center", "align-items": "center"}
+                value="peak-accordian",
             ),
-            html.Div(
-                [
-                    html.P("Peak Width:", style={"margin-top": 10}),
-                    dbc.Input(type="number", style={"width": 100, "margin-left": 20}, className="sidebar-input", id="peak-width")
-                ],
-                style={"display": "flex", "justify-content": "center", "align-items": "center"}
-            )
         ]
     )
 
@@ -56,6 +81,14 @@ def peak_options():
 )
 def display_dropdowns(n_clicks):
     patched_children = Patch()
-    peak = peak_options()
+    peak = peak_options(n_clicks)
     patched_children.append(peak)
     return patched_children
+
+@callback(
+    Output({'type': 'peak-set-name', 'index': MATCH}, "children"),
+    Input({'type': 'peak-edit-name', 'index': MATCH}, "value"),
+    prevent_initial_call=True
+)
+def set_peak_name(name):
+    return name
