@@ -4,7 +4,7 @@ import dash_mantine_components as dmc
 from dash import html, dcc
 
 from components.sidebar import sidebar
-from components.graph import fig
+from components.graph import graph
 
 
 app = dash.Dash(
@@ -18,7 +18,7 @@ app.layout = dmc.MantineProvider(
     html.Div(
         [
             sidebar,
-            dcc.Graph(figure=fig, className='content')
+            graph
         ],
     )
 )
