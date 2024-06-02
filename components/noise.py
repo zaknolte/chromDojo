@@ -19,8 +19,8 @@ noise_accordian = dmc.Accordion(
                 dmc.AccordionPanel(
                     html.Div(
                         [
-                            html.P("Add Noise:", style={"margin-top": 10}),
-                            dbc.Input(type="number", style={"width": 100, "margin-left": 20}, className="sidebar-input", id="add-noise")
+                            html.P("Noise Factor:", style={"margin-top": 10}),
+                            dbc.Input(type="number", value=1, placeholder=1, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id="add-noise")
                         ],
                         style={"display": "flex", "justify-content": "center", "align-items": "center"}
                     ),
