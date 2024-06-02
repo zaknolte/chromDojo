@@ -10,6 +10,7 @@
   z-index: 1050;
   transition: width 0.1s ease-in-out;
   color: black;
+  overflow-y: scroll;
 }
 
 /* when the user hovers on the sidebar, expand it */
@@ -21,7 +22,7 @@
 .sidebar .nav {
   width: 100%;
   max-width: 100%;
-  overflow: hidden;
+  /* overflow: hidden; */
   white-space: nowrap;
   display: flex;
   padding-right: 1rem;
@@ -56,7 +57,7 @@
   display: flex;
   justify-content: left;
   align-items: center;
-  overflow: hidden;
+  /* overflow: hidden; */
   white-space: nowrap;
 }
 
@@ -76,7 +77,6 @@
 
 /* position the content relative to the collapsed sidebar */
 .content {
-
   margin-left: 7rem;
   margin-right: 2rem;
   padding: 2rem 1rem;
