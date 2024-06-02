@@ -1,8 +1,11 @@
 import dash
 import dash_bootstrap_components as dbc
+import dash_mantine_components as dmc
 from dash import html, dcc
 
+from components.sidebar import sidebar
 from components.graph import fig
+
 
 app = dash.Dash(
     __name__,
@@ -11,31 +14,13 @@ app = dash.Dash(
 )
 
 
-sidebar = html.Div(
-    [
-        html.Div(
-            [html.I(className="fa-solid fa-sliders me-2"),
-             html.Span("Settings")],
-            className="sidebar-header",
-        ),
-        html.Hr(),
-        dbc.Nav(
-            [
-                html.H2("test 1"),
-                html.H5("test 2")
-            ],
-            vertical=True,
-            pills=True,
-        ),
-    ],
-    className="sidebar",
-)
-
-app.layout = html.Div(
-    [
-        sidebar,
-        dcc.Graph(figure=fig, className='content')
-    ],
+app.layout = dmc.MantineProvider(
+    html.Div(
+        [
+            sidebar,
+            dcc.Graph(figure=fig, className='content')
+        ],
+    )
 )
 
 if __name__ == "__main__":
