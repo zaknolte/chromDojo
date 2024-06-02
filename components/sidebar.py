@@ -1,7 +1,7 @@
 from dash import html
 import dash_bootstrap_components as dbc
 
-from components.graph import graph_datapoints
+from components.datapoints import graph_datapoints
 from components.add_peaks import peak_accordian
 from components.noise import noise_accordian
 
