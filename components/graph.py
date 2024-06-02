@@ -1,5 +1,5 @@
 import plotly.graph_objects as go
-from dash import dcc, callback, Output, Input, Patch, ALL, no_update
+from dash import dcc, callback, Output, Input, State, Patch, ALL, no_update
 import dash_bootstrap_components as dbc
 import numpy as np
 import peakutils
@@ -62,10 +62,12 @@ graph = dcc.Graph(figure=fig, className='content', id="main-fig")
     Input({"type": "peak-height", "index": ALL}, "value"),
     Input({"type": "peak-width", "index": ALL}, "value"),
     Input("add-noise", "value"),
+    State({'type': 'peak-edit-name', 'index': ALL}, "value"),
+    Input({'type': 'peak-add-annotation', 'index': ALL}, "value"),
     prevent_initial_call=True
 )
-def update_fig(datapoints, centers, heights, widths, noise):
-    if not all([datapoints, centers, heights, widths, noise]):
+def update_fig(datapoints, centers, heights, widths, noise, names, is_checked):
+    if not all([datapoints, centers, heights, widths, noise, is_checked]):
         return no_update
     
     patched_figure = Patch()
@@ -76,5 +78,15 @@ def update_fig(datapoints, centers, heights, widths, noise):
 
     patched_figure["data"][0]["x"] = x
     patched_figure["data"][0]["y"] = y
+    
+    annotations = [
+        {
+            "text": values[1],
+            "x": values[2],
+            "y": values[3],
+        }
+        for values in zip(is_checked, names, centers, heights) if values[0]
+    ]
+    patched_figure["layout"]["annotations"] = annotations
 
     return patched_figure

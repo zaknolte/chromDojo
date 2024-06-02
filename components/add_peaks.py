@@ -1,9 +1,9 @@
-from dash import Dash, dcc, html, Input, Output, ALL, Patch, callback, MATCH
+from dash import Dash, dcc, html, Input, Output, State, ALL, Patch, callback, MATCH
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 
-
+# base peak accordion - no peaks exist by default
 peak_accordian = dmc.Accordion(
     children=[
         dmc.AccordionItem(
@@ -29,7 +29,7 @@ peak_accordian = dmc.Accordion(
     ]
 )
 
-
+# new peak accordion with all peak editing options
 def peak_options(n_clicks):
     return dmc.Accordion(
         children=[
@@ -44,6 +44,13 @@ def peak_options(n_clicks):
                                     dbc.Button(DashIconify(icon="ph:pencil-thin"), disabled=True)
                                 ],
                                 className="accordian-options"
+                            ),
+                            html.Div(
+                                [
+                                    dbc.Switch(label="Add label annotation", id={"type": "peak-add-annotation", "index": n_clicks})
+                                ],
+                                className="accordian-options",
+                                style={"margin-top": "1rem"}
                             ),
                             html.Div(
                                 [
@@ -65,9 +72,8 @@ def peak_options(n_clicks):
                                     dbc.Input(type="number", value=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "peak-width", "index": n_clicks})
                                 ],
                                 className="accordian-options"
-                            )
+                            ),
                         ],
-                        id="test",
                     ),
                 ],
                 value="peak-accordian",
@@ -75,7 +81,7 @@ def peak_options(n_clicks):
         ]
     )
 
-
+# Add another peak accordian with all peak options
 @callback(
     Output("add-peak-accordian", "children"), Input("add-peak", "n_clicks"), prevent_initial_call=True
 )
@@ -85,6 +91,7 @@ def display_dropdowns(n_clicks):
     patched_children.append(peak)
     return patched_children
 
+# Rename peak
 @callback(
     Output({'type': 'peak-set-name', 'index': MATCH}, "children"),
     Input({'type': 'peak-edit-name', 'index': MATCH}, "value"),
