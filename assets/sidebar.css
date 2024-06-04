@@ -10,12 +10,12 @@
   z-index: 1050;
   transition: width 0.1s ease-in-out;
   color: black;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 /* when the user hovers on the sidebar, expand it */
 .sidebar:hover {
-  width: 20rem;
+  width: 25rem;
 }
 
 /* make sure the contents of the navlink don't wrap when navbar collapses */
@@ -85,5 +85,5 @@
 }
 
 .sidebar:hover+.content {
-  margin-left: 18rem;
+  margin-left: 22rem;
 }
