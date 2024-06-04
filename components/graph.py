@@ -14,13 +14,29 @@ def calc_noise(num_points, factor):
 def create_peak(x, height, center, width):
     return peakutils.gaussian(x, height, center, width)
 
-def calc_y(peaks, noise):
-    y = noise
+def calc_y(peaks):
+    y = 0
     for peak in peaks:
         y += peak
     
     return y
 
+def add_noise(y, noise):
+    y += noise
+    return y
+
+def add_slope(y, start, stop, factor, reset):
+    if factor != 0:
+        y_slice = y[start:stop]
+        for i in range(len(y_slice)):
+            y_slice[i] += (i * factor)
+        
+        y[start: stop] = y_slice
+
+        if not reset:
+            y[stop:] = y_slice[-1]
+
+    return y
 
 fig = go.Figure(
         go.Scatter(
@@ -58,26 +74,46 @@ graph = dcc.Graph(figure=fig, className='content', id="main-fig")
 @callback(
     Output("main-fig", "figure"),
     Input("graph-datapoints", "value"),
+    State({'type': 'peak-edit-name', 'index': ALL}, "value"),
+    Input({'type': 'peak-add-annotation', 'index': ALL}, "value"),
     Input({"type": "peak-center", "index": ALL}, "value"),
     Input({"type": "peak-height", "index": ALL}, "value"),
     Input({"type": "peak-width", "index": ALL}, "value"),
     Input("add-noise", "value"),
-    State({'type': 'peak-edit-name', 'index': ALL}, "value"),
-    Input({'type': 'peak-add-annotation', 'index': ALL}, "value"),
+    Input({"type": "baseline-start", "index": ALL}, "value"),
+    Input({"type": "baseline-stop", "index": ALL}, "value"),
+    Input({"type": "baseline-slope", "index": ALL}, "value"),
+    Input({"type": "reset_baseline", "index": ALL}, "value"),
     prevent_initial_call=True
 )
-def update_fig(datapoints, centers, heights, widths, noise, names, is_checked):
-    if not all([datapoints, centers, heights, widths, noise, is_checked]):
+def update_fig(
+    datapoints,
+    names,
+    add_annotation,
+    centers,
+    heights,
+    widths,
+    noise,
+    baseline_starts,
+    baseline_stops,
+    slope_factors,
+    reset_baseline
+    ):
+    if not all([datapoints, centers, heights, widths, noise, add_annotation]):
         return no_update
     
     patched_figure = Patch()
 
     x = calc_x(datapoints)
     peaks = (create_peak(x, peak[0], peak[1], peak[2]) for peak in zip(heights, centers, widths))
-    y = calc_y(peaks, calc_noise(x.size, noise))
+    noise = calc_noise(x.size, noise)
+    y = calc_y(peaks)
 
-    patched_figure["data"][0]["x"] = x
-    patched_figure["data"][0]["y"] = y
+    if all([baseline_starts, baseline_stops, slope_factors, reset_baseline]):
+        for slope in zip(baseline_starts, baseline_stops, slope_factors, reset_baseline):
+            y = add_slope(y, slope[0], slope[1], slope[2], slope[3])
+
+    y = add_noise(y, noise)
     
     annotations = [
         {
@@ -85,8 +121,11 @@ def update_fig(datapoints, centers, heights, widths, noise, names, is_checked):
             "x": values[2],
             "y": values[3],
         }
-        for values in zip(is_checked, names, centers, heights) if values[0]
+        for values in zip(add_annotation, names, centers, heights) if values[0]
     ]
     patched_figure["layout"]["annotations"] = annotations
+
+    patched_figure["data"][0]["x"] = x
+    patched_figure["data"][0]["y"] = y
 
     return patched_figure

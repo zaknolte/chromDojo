@@ -4,6 +4,7 @@ import dash_bootstrap_components as dbc
 from components.datapoints import graph_datapoints
 from components.add_peaks import peak_accordian
 from components.noise import noise_accordian
+from components.baseline import baseline_accordian
 
 
 sidebar = html.Div(
@@ -20,7 +21,9 @@ sidebar = html.Div(
                 html.Hr(),
                 peak_accordian,
                 html.Hr(),
-                noise_accordian
+                noise_accordian,
+                html.Hr(),
+                baseline_accordian,
             ],
             vertical=True,
             pills=True,
