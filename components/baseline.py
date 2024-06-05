@@ -18,6 +18,55 @@ baseline_accordian = dmc.Accordion(
                 ),
                 dmc.AccordionPanel(
                     [
+                        dmc.Accordion(
+                            children=[
+                                dmc.AccordionItem(
+                                    [
+                                        dmc.AccordionControl(
+                                            f"Column Bleed",
+                                            icon=DashIconify(
+                                                icon="covid:covid-carrier-blood-2",
+                                                color="black",
+                                                width=20,
+                                            ),
+                                        ),
+                                        dmc.AccordionPanel(
+                                            [
+                                                html.Div(
+                                                    [
+                                                        html.P("Bleed X Start:", style={"margin-top": 10}),
+                                                        dbc.Input(type="number", value=0, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id="bleed-start")
+                                                    ],
+                                                    className="accordian-options"
+                                                ),
+                                                html.Div(
+                                                    [
+                                                        html.P("Bleed X Stop:", style={"margin-top": 10}),
+                                                        dbc.Input(type="number", value=0, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id="bleed-stop")
+                                                    ],
+                                                    className="accordian-options"
+                                                ),
+                                                html.Div(
+                                                    [
+                                                        html.P("Bleed Height:", style={"margin-top": 10}),
+                                                        dbc.Input(type="number", value=0, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id="bleed-height")
+                                                    ],
+                                                    className="accordian-options"
+                                                ),
+                                                html.Div(
+                                                    [
+                                                        html.P("Slope Factor:", style={"margin-top": 10}),
+                                                        dbc.Input(type="number", value=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id="bleed-slope")
+                                                    ],
+                                                    className="accordian-options"
+                                                ),
+                                            ],
+                                        ),
+                                    ],
+                                    value="bleed-accordian",
+                                ),
+                            ]
+                        ),
                         dbc.Button("+ Add Trendline", id="add-trendline", style={"width": "100%"}),
                         html.Hr()
                     ],

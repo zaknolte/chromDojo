@@ -38,6 +38,16 @@ def add_slope(y, start, stop, factor, reset):
 
     return y
 
+def add_bleed(y, start, stop, height, factor):
+    x = calc_x(stop - start) # x range to replace with slope
+    x -= x[len(x)//2] # shift range to center on 0 for sigmoid
+    vals = height / (1 + np.exp(-x*factor))
+
+    y[start: stop + 1] = vals
+    y[stop:] = vals[-1]
+
+    return y
+
 fig = go.Figure(
         go.Scatter(
             x=[0],
@@ -84,6 +94,10 @@ graph = dcc.Graph(figure=fig, className='content', id="main-fig")
     Input({"type": "baseline-stop", "index": ALL}, "value"),
     Input({"type": "baseline-slope", "index": ALL}, "value"),
     Input({"type": "reset_baseline", "index": ALL}, "value"),
+    Input("bleed-start", "value"),
+    Input("bleed-stop", "value"),
+    Input("bleed-height", "value"),
+    Input("bleed-slope", "value"),
     prevent_initial_call=True
 )
 def update_fig(
@@ -97,21 +111,33 @@ def update_fig(
     baseline_starts,
     baseline_stops,
     slope_factors,
-    reset_baseline
+    reset_baseline,
+    bleed_start,
+    bleed_stop,
+    bleed_height,
+    bleed_slope
     ):
+    # early return if no peak data yet
     if not all([datapoints, centers, heights, widths, noise, add_annotation]):
         return no_update
     
     patched_figure = Patch()
 
+    # add peaks
     x = calc_x(datapoints)
     peaks = (create_peak(x, peak[0], peak[1], peak[2]) for peak in zip(heights, centers, widths))
     noise = calc_noise(x.size, noise)
     y = calc_y(peaks)
-
+        
+    # add baselines
     if all([baseline_starts, baseline_stops, slope_factors, reset_baseline]):
         for slope in zip(baseline_starts, baseline_stops, slope_factors, reset_baseline):
             y = add_slope(y, slope[0], slope[1], slope[2], slope[3])
+
+    # add bleed
+    if all([bleed_start, bleed_stop, bleed_height, bleed_slope]):
+        y = add_bleed(y, bleed_start, bleed_stop, bleed_height, bleed_slope)
+
 
     y = add_noise(y, noise)
     
