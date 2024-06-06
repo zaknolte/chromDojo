@@ -25,7 +25,7 @@ def add_noise(y, noise):
     y += noise
     return y
 
-def add_slope(y, start, stop, factor, reset):
+def add_trendline(y, start, stop, factor, reset):
     if factor != 0:
         y_slice = y[start:stop]
         for i in range(len(y_slice)):
@@ -94,10 +94,10 @@ graph = dcc.Graph(figure=fig, className='content', id="main-fig")
     Input({"type": "baseline-stop", "index": ALL}, "value"),
     Input({"type": "baseline-slope", "index": ALL}, "value"),
     Input({"type": "reset_baseline", "index": ALL}, "value"),
-    Input("bleed-start", "value"),
-    Input("bleed-stop", "value"),
-    Input("bleed-height", "value"),
-    Input("bleed-slope", "value"),
+    Input({"type": "bleed-start", "index": ALL}, "value"),
+    Input({"type": "bleed-stop", "index": ALL}, "value"),
+    Input({"type": "bleed-height", "index": ALL}, "value"),
+    Input({"type": "bleed-slope", "index": ALL}, "value"),
     prevent_initial_call=True
 )
 def update_fig(
@@ -131,14 +131,17 @@ def update_fig(
         
     # add baselines
     if all([baseline_starts, baseline_stops, slope_factors, reset_baseline]):
-        for slope in zip(baseline_starts, baseline_stops, slope_factors, reset_baseline):
-            y = add_slope(y, slope[0], slope[1], slope[2], slope[3])
+        # pattern matching callback - grabs all dynamically created baseline options
+        for trendline in zip(baseline_starts, baseline_stops, slope_factors, reset_baseline):
+            y = add_trendline(y, trendline[0], trendline[1], trendline[2], trendline[3])
 
     # add bleed
     if all([bleed_start, bleed_stop, bleed_height, bleed_slope]):
-        y = add_bleed(y, bleed_start, bleed_stop, bleed_height, bleed_slope)
+        # have to use pattern matching callbacks since component only conditionally exists even though there's only one option
+        # should always be lists of single value
+        y = add_bleed(y, bleed_start[0], bleed_stop[0], bleed_height[0], bleed_slope[0])
 
-
+    # add noise last otherwise some functions will ovewrite
     y = add_noise(y, noise)
     
     annotations = [
