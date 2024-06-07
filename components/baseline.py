@@ -81,7 +81,7 @@ bleed_options = dmc.Accordion(
                             html.Div(
                                 [
                                     html.P("Slope Factor:", style={"margin-top": 10}),
-                                    dbc.Input(type="number", value=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "bleed-slope", "index": 1})
+                                    dbc.Input(type="number", value=0, step=0.1, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "bleed-slope", "index": 1})
                                 ],
                                 className="accordian-options"
                             ),
