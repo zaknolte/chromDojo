@@ -118,7 +118,7 @@ def update_fig(
     bleed_slope
     ):
     # early return if no peak data yet
-    if not all([datapoints, centers, heights, widths, noise, add_annotation]):
+    if not all([datapoints, centers, heights, widths, add_annotation]):
         return no_update
     
     patched_figure = Patch()
@@ -126,7 +126,6 @@ def update_fig(
     # add peaks
     x = calc_x(datapoints)
     peaks = (create_peak(x, peak[0], peak[1], peak[2]) for peak in zip(heights, centers, widths))
-    noise = calc_noise(x.size, noise)
     y = calc_y(peaks)
         
     # add baselines
@@ -142,6 +141,7 @@ def update_fig(
         y = add_bleed(y, bleed_start[0], bleed_stop[0], bleed_height[0], bleed_slope[0])
 
     # add noise last otherwise some functions will ovewrite
+    noise = calc_noise(x.size, noise)
     y = add_noise(y, noise)
     
     annotations = [
