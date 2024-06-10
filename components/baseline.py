@@ -19,6 +19,13 @@ baseline_accordian = dmc.Accordion(
                 dmc.AccordionPanel(
                     [
                         html.Div(
+                                [
+                                    html.P("Baseline Shift Y:", style={"margin-top": 10}),
+                                    dbc.Input(type="number", value=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id="baseline-shift")
+                                ],
+                                className="accordian-options"
+                        ),
+                        html.Div(
                             [
                                 dmc.Switch(
                                     id="trendline-choice",
@@ -81,7 +88,7 @@ bleed_options = dmc.Accordion(
                             html.Div(
                                 [
                                     html.P("Slope Factor:", style={"margin-top": 10}),
-                                    dbc.Input(type="number", value=0, step=0.1, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "bleed-slope", "index": 1})
+                                    dbc.Input(type="number", value=0, step=0.01, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "bleed-slope", "index": 1})
                                 ],
                                 className="accordian-options"
                             ),
