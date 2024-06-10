@@ -11,8 +11,12 @@ def calc_x(num_points):
 def calc_noise(num_points, factor):
     return np.random.rand(num_points) * factor
 
-def create_peak(x, height, center, width):
-    return peakutils.gaussian(x, height, center, width)
+def create_peak(x, height, center, width, skew):
+    # return peakutils.gaussian(x, height, center, width)
+    # https://www.desmos.com/calculator/gokr63ciym
+    return height * np.exp(-0.5 * ((x - center) / (width + (skew * (x - center))))**2)
+    # https://www.desmos.com/calculator/k5y9glwjee   ??
+    # https://math.stackexchange.com/questions/3605861/what-is-the-graph-function-of-a-skewed-normal-distribution-curve
 
 def calc_y(peaks):
     y = 0
@@ -41,10 +45,10 @@ def add_trendline(y, start, stop, factor, reset):
 def add_bleed(y, start, stop, height, factor):
     x = calc_x(stop - start) # x range to replace with slope
     x -= x[len(x)//2] # shift range to center on 0 for sigmoid
-    vals = height / (1 + np.exp(-x*factor))
+    vals = height / (1 + np.exp(-x*factor) / factor)
 
-    y[start: stop + 1] = vals
-    y[stop:] = vals[-1]
+    y[start: stop + 1] += vals
+    y[stop + 1:] += vals[-1]
 
     return y
 
@@ -89,7 +93,9 @@ graph = dcc.Graph(figure=fig, className='content', id="main-fig")
     Input({"type": "peak-center", "index": ALL}, "value"),
     Input({"type": "peak-height", "index": ALL}, "value"),
     Input({"type": "peak-width", "index": ALL}, "value"),
+    Input({"type": "peak-skew", "index": ALL}, "value"),
     Input("add-noise", "value"),
+    Input("baseline-shift", "value"),
     Input({"type": "baseline-start", "index": ALL}, "value"),
     Input({"type": "baseline-stop", "index": ALL}, "value"),
     Input({"type": "baseline-slope", "index": ALL}, "value"),
@@ -107,7 +113,9 @@ def update_fig(
     centers,
     heights,
     widths,
+    skew_factor,
     noise,
+    baseline_shift,
     baseline_starts,
     baseline_stops,
     slope_factors,
@@ -118,21 +126,15 @@ def update_fig(
     bleed_slope
     ):
     # early return if no peak data yet
-    if not all([datapoints, centers, heights, widths, add_annotation]):
+    if not all([datapoints, centers, heights, widths, skew_factor, add_annotation]):
         return no_update
     
     patched_figure = Patch()
 
     # add peaks
     x = calc_x(datapoints)
-    peaks = (create_peak(x, peak[0], peak[1], peak[2]) for peak in zip(heights, centers, widths))
+    peaks = (create_peak(x, peak[0], peak[1], peak[2], peak[3]) for peak in zip(heights, centers, widths, skew_factor))
     y = calc_y(peaks)
-        
-    # add baselines
-    if all([baseline_starts, baseline_stops, slope_factors, reset_baseline]):
-        # pattern matching callback - grabs all dynamically created baseline options
-        for trendline in zip(baseline_starts, baseline_stops, slope_factors, reset_baseline):
-            y = add_trendline(y, trendline[0], trendline[1], trendline[2], trendline[3])
 
     # add bleed
     if all([bleed_start, bleed_stop, bleed_height, bleed_slope]):
@@ -140,9 +142,18 @@ def update_fig(
         # should always be lists of single value
         y = add_bleed(y, bleed_start[0], bleed_stop[0], bleed_height[0], bleed_slope[0])
 
+    # add baselines
+    if all([baseline_starts, baseline_stops, slope_factors, reset_baseline]):
+        # pattern matching callback - grabs all dynamically created baseline options
+        for trendline in zip(baseline_starts, baseline_stops, slope_factors, reset_baseline):
+            y = add_trendline(y, trendline[0], trendline[1], trendline[2], trendline[3])
+        
     # add noise last otherwise some functions will ovewrite
     noise = calc_noise(x.size, noise)
     y = add_noise(y, noise)
+
+    # adjust full baseline
+    y += baseline_shift
     
     annotations = [
         {
