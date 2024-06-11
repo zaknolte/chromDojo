@@ -1,5 +1,5 @@
 import plotly.graph_objects as go
-from dash import dcc, callback, Output, Input, State, Patch, ALL, no_update
+from dash import dcc, callback, Output, Input, State, Patch, ALL, no_update, ctx
 import dash_bootstrap_components as dbc
 import numpy as np
 import peakutils
@@ -27,10 +27,6 @@ def calc_y(peaks):
     for peak in peaks:
         y += peak
     
-    return y
-
-def add_noise(y, noise):
-    y += noise
     return y
 
 def add_trendline(y, start, stop, factor, reset):
@@ -104,7 +100,7 @@ graph = dcc.Graph(figure=fig, className='content', id="main-fig", config=configs
     Input({"type": "peak-height", "index": ALL}, "value"),
     Input({"type": "peak-width", "index": ALL}, "value"),
     Input({"type": "peak-skew", "index": ALL}, "value"),
-    Input("add-noise", "value"),
+    Input("noise-data", "data"),
     Input("baseline-shift", "value"),
     Input({"type": "baseline-start", "index": ALL}, "value"),
     Input({"type": "baseline-stop", "index": ALL}, "value"),
@@ -114,6 +110,7 @@ graph = dcc.Graph(figure=fig, className='content', id="main-fig", config=configs
     Input({"type": "bleed-stop", "index": ALL}, "value"),
     Input({"type": "bleed-height", "index": ALL}, "value"),
     Input({"type": "bleed-slope", "index": ALL}, "value"),
+    Input("main-fig", "relayoutData"), # shapes trigger relayout
     prevent_initial_call=True
 )
 def update_fig(
@@ -133,13 +130,23 @@ def update_fig(
     bleed_start,
     bleed_stop,
     bleed_height,
-    bleed_slope
+    bleed_slope,
+    integrations
     ):
     # early return if no peak data yet
     if not all([datapoints, centers, heights, widths, skew_factor, add_annotation]):
         return no_update
     
+    if ctx.triggered_id == "main-fig":
+        # TODO add logic for integration shapes
+        return no_update
+
+    print(integrations.get("shapes"))
     patched_figure = Patch()
+
+    # !! specific order of operations !!
+    # some functions like bleed will overwrite some values
+    # ensure data is added / manipulated to graph in correct order
 
     # add peaks
     x = calc_x(datapoints)
@@ -149,7 +156,7 @@ def update_fig(
     # add bleed
     if all([bleed_start, bleed_stop, bleed_height, bleed_slope]):
         # have to use pattern matching callbacks since component only conditionally exists even though there's only one option
-        # should always be lists of single value
+        # should always be list of single value
         y = add_bleed(y, bleed_start[0], bleed_stop[0], bleed_height[0], bleed_slope[0])
 
     # add baselines
@@ -158,13 +165,13 @@ def update_fig(
         for trendline in zip(baseline_starts, baseline_stops, slope_factors, reset_baseline):
             y = add_trendline(y, trendline[0], trendline[1], trendline[2], trendline[3])
         
-    # add noise last otherwise some functions will ovewrite
-    noise = calc_noise(x.size, noise)
-    y = add_noise(y, noise)
+    # add noise
+    y += noise
 
     # adjust full baseline
     y += baseline_shift
     
+    # add annotations
     annotations = [
         {
             "text": values[1],
