@@ -55,21 +55,21 @@ def peak_options(n_clicks):
                             html.Div(
                                 [
                                     html.P("Peak Center:", style={"margin-top": 10}),
-                                    dbc.Input(type="number", value=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "peak-center", "index": n_clicks})
+                                    dbc.Input(type="number", value=0, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "peak-center", "index": n_clicks})
                                 ],
                                 className="accordian-options"
                             ),
                             html.Div(
                                 [
                                     html.P("Peak Height:", style={"margin-top": 10}),
-                                    dbc.Input(type="number", value=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "peak-height", "index": n_clicks})
+                                    dbc.Input(type="number", value=0, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "peak-height", "index": n_clicks})
                                 ],
                                 className="accordian-options"
                             ),
                             html.Div(
                                 [
                                     html.P("Peak Width:", style={"margin-top": 10}),
-                                    dbc.Input(type="number", value=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "peak-width", "index": n_clicks})
+                                    dbc.Input(type="number", value=0, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "peak-width", "index": n_clicks})
                                 ],
                                 className="accordian-options"
                             ),
