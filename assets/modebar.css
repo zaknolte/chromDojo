@@ -1,0 +1,8 @@
+.js-plotly-plot .plotly .modebar {
+    left: 45%;
+    margin-top: 3%;
+}
+
+.js-plotly-plot .plotly .modebar-btn {
+    font-size: 1.5rem !important;
+}
