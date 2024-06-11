@@ -13,6 +13,10 @@ def calc_noise(num_points, factor):
 
 def create_peak(x, height, center, width, skew):
     # return peakutils.gaussian(x, height, center, width)
+    # current formula with skewness does not draw with width = 0
+    # set to minimal sharp value to improve UX and not have peaks disappearing
+    if width == 0:
+        width = 0.1
     # https://www.desmos.com/calculator/gokr63ciym
     return height * np.exp(-0.5 * ((x - center) / (width + (skew * (x - center))))**2)
     # https://www.desmos.com/calculator/k5y9glwjee   ??
@@ -82,7 +86,13 @@ fig.update_yaxes(
     }
 )
 
-graph = dcc.Graph(figure=fig, className='content', id="main-fig")
+configs = {
+    "scrollZoom": True,
+    "modeBarButtons": [["pan2d", "zoom2d", "drawline", "resetScale2d"]],
+    "displayModeBar": True,
+}
+
+graph = dcc.Graph(figure=fig, className='content', id="main-fig", config=configs)
 
 
 @callback(
