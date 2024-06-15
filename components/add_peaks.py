@@ -40,17 +40,10 @@ def peak_options(n_clicks):
                         [
                             html.Div(
                                 [
-                                    dbc.Input(placeholder=f"Peak {n_clicks}", type="text", id={"type": "peak-edit-name", "index": n_clicks}),
+                                    dbc.Input(value=f"Peak {n_clicks}", type="text", id={"type": "peak-edit-name", "index": n_clicks}),
                                     dbc.Button(DashIconify(icon="ph:pencil-thin"), disabled=True)
                                 ],
                                 className="accordian-options"
-                            ),
-                            html.Div(
-                                [
-                                    dbc.Switch(label="Add label annotation", id={"type": "peak-add-annotation", "index": n_clicks})
-                                ],
-                                className="accordian-options",
-                                style={"margin-top": "1rem"}
                             ),
                             html.Div(
                                 [
