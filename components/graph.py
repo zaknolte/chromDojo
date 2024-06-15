@@ -21,6 +21,7 @@ def create_peak(x, height, center, width, skew):
     return height * np.exp(-0.5 * ((x - center) / (width + (skew * (x - center))))**2)
     # https://www.desmos.com/calculator/k5y9glwjee   ??
     # https://math.stackexchange.com/questions/3605861/what-is-the-graph-function-of-a-skewed-normal-distribution-curve
+    # https://cremerlab.github.io/hplc-py/methodology/fitting.html
 
 def calc_y(peaks):
     y = 0
@@ -51,6 +52,27 @@ def add_bleed(y, start, stop, height, factor):
     y[stop + 1:] += vals[-1]
 
     return y
+
+def make_annotations(peaks, annotations_options):
+    annotations = []
+    for peak in peaks:
+        text = ""
+        for option in annotations_options:
+            if option["Field"] == "Peak Name" and option["Add to Plot"]:
+                text += f"{peak[0]}<br>"
+            if option["Field"] == "RT" and option["Add to Plot"]:
+                text += f"RT: {peak[1]}<br>"
+            if option["Field"] == "Concentration" and option["Add to Plot"]:
+                text += f"Conc: {peak[2]}<br>" #TODO add integration concentrations
+        annotations.append(
+            {
+                "text": text,
+                "x": peak[1],
+                "y": peak[2],
+            }
+        )
+    return annotations
+            
 
 fig = go.Figure(
         go.Scatter(
@@ -94,8 +116,7 @@ graph = dcc.Graph(figure=fig, className='content', id="main-fig", config=configs
 @callback(
     Output("main-fig", "figure"),
     Input("graph-datapoints", "value"),
-    State({'type': 'peak-edit-name', 'index': ALL}, "value"),
-    Input({'type': 'peak-add-annotation', 'index': ALL}, "value"),
+    Input({'type': 'peak-edit-name', 'index': ALL}, "value"),
     Input({"type": "peak-center", "index": ALL}, "value"),
     Input({"type": "peak-height", "index": ALL}, "value"),
     Input({"type": "peak-width", "index": ALL}, "value"),
@@ -110,13 +131,14 @@ graph = dcc.Graph(figure=fig, className='content', id="main-fig", config=configs
     Input({"type": "bleed-stop", "index": ALL}, "value"),
     Input({"type": "bleed-height", "index": ALL}, "value"),
     Input({"type": "bleed-slope", "index": ALL}, "value"),
+    Input("annotations-options", "virtualRowData"), # trigger for re-arranging annotation rows
+    Input("annotations-options", "cellRendererData"), # trigger for annotation checkboxes
     Input("main-fig", "relayoutData"), # shapes trigger relayout
     prevent_initial_call=True
 )
 def update_fig(
     datapoints,
     names,
-    add_annotation,
     centers,
     heights,
     widths,
@@ -131,17 +153,19 @@ def update_fig(
     bleed_stop,
     bleed_height,
     bleed_slope,
+    annotation_order,
+    add_annotation,
     integrations
     ):
     # early return if no peak data yet
-    if not all([datapoints, centers, heights, widths, skew_factor, add_annotation]):
+    if not all([datapoints, centers, heights, widths, skew_factor]):
         return no_update
     
     if ctx.triggered_id == "main-fig":
+        print(integrations.get("shapes"))
         # TODO add logic for integration shapes
         return no_update
 
-    print(integrations.get("shapes"))
     patched_figure = Patch()
 
     # !! specific order of operations !!
@@ -172,15 +196,8 @@ def update_fig(
     y += baseline_shift
     
     # add annotations
-    annotations = [
-        {
-            "text": values[1],
-            "x": values[2],
-            "y": values[3],
-        }
-        for values in zip(add_annotation, names, centers, heights) if values[0]
-    ]
-    patched_figure["layout"]["annotations"] = annotations
+    if any([field["Add to Plot"] for field in annotation_order]):
+        patched_figure["layout"]["annotations"] = make_annotations(zip(names, centers, heights), annotation_order)
 
     patched_figure["data"][0]["x"] = x
     patched_figure["data"][0]["y"] = y
