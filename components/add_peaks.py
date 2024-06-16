@@ -1,4 +1,4 @@
-from dash import Dash, dcc, html, Input, Output, State, ALL, Patch, callback, MATCH
+from dash import Dash, dcc, html, Input, Output, State, ALL, Patch, callback, MATCH, ctx
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
@@ -19,7 +19,8 @@ peak_accordian = dmc.Accordion(
                 dmc.AccordionPanel(
                     [
                         dbc.Button("+ Add Peak", id="add-peak", style={"width": "100%"}),
-                        html.Hr()
+                        html.Hr(),
+                        html.Div(id="add-peak-container")
                     ],
                     id="add-peak-accordian"
                 ),
@@ -38,6 +39,18 @@ def peak_options(n_clicks):
                     dmc.AccordionControl(f"Peak {n_clicks}", id={"type": "peak-set-name", "index": n_clicks}),
                     dmc.AccordionPanel(
                         [
+                            html.Div(
+                                [
+                                    dmc.ActionIcon(
+                                        DashIconify(icon="material-symbols-light:cancel-outline", width=20),
+                                        size="lg",
+                                        color="red",
+                                        variant="subtle",
+                                        id={"type": "peak-delete", "index": n_clicks},
+                                    )
+                                ],
+                                style={"display": "flex", "justifyContent": "flex-end"}
+                            ),
                             html.Div(
                                 [
                                     dbc.Input(value=f"Peak {n_clicks}", type="text", id={"type": "peak-edit-name", "index": n_clicks}),
@@ -78,17 +91,29 @@ def peak_options(n_clicks):
                 ],
                 value="peak-accordian",
             ),
-        ]
+        ],
     )
 
-# Add another peak accordian with all peak options
+# Add / Delete another peak accordian with all peak options
 @callback(
-    Output("add-peak-accordian", "children"), Input("add-peak", "n_clicks"), prevent_initial_call=True
+    Output("add-peak-container", "children"),
+    Input("add-peak", "n_clicks"),
+    Input({"type": "peak-delete", "index": ALL}, "n_clicks"),
+    prevent_initial_call=True
 )
-def display_dropdowns(n_clicks):
+def display_dropdowns(add_peak, del_peak):
     patched_children = Patch()
-    peak = peak_options(n_clicks)
-    patched_children.append(peak)
+    if ctx.triggered_id != "add-peak":
+        values_to_remove = []
+        for i, val in enumerate(del_peak):
+            if val:
+                # add idx backwards to preserve deletion idx
+                values_to_remove.insert(0, i)
+        for v in values_to_remove:
+            del patched_children[v]
+    else:
+        peak = peak_options(add_peak)
+        patched_children.append(peak)
     return patched_children
 
 # Rename peak

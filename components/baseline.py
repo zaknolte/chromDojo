@@ -1,4 +1,4 @@
-from dash import Dash, dcc, html, Input, Output, State, ALL, Patch, callback, MATCH, no_update
+from dash import Dash, dcc, html, Input, Output, State, ALL, Patch, callback, MATCH, no_update, ctx
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
@@ -104,9 +104,9 @@ trendline_choice = [
     html.Div(
         [
             dbc.Button("+ Add Trendline", id="add-trendline", style={"width": "100%"}),
-            html.Hr()
+            html.Hr(),
+            html.Div(id="add-trendline-container")
         ],
-        id="add-trendline-container"
     )
     
 ]
@@ -119,6 +119,18 @@ def trendline_options(n_clicks):
                     dmc.AccordionControl(f"Baseline Trend {n_clicks}", id={"type": "baseline-trendline", "index": n_clicks}),
                     dmc.AccordionPanel(
                         [
+                            html.Div(
+                                [
+                                    dmc.ActionIcon(
+                                        DashIconify(icon="material-symbols-light:cancel-outline", width=20),
+                                        size="lg",
+                                        color="red",
+                                        variant="subtle",
+                                        id={"type": "trendline-delete", "index": n_clicks},
+                                    )
+                                ],
+                                style={"display": "flex", "justifyContent": "flex-end"}
+                            ),
                             html.Div(
                                 [
                                     html.P("Trendline X Start:", style={"margin-top": 10}),
@@ -155,7 +167,7 @@ def trendline_options(n_clicks):
         ]
     )
 
-
+# switch between linear trendlines or sigmoidal column bleed
 @callback(
     Output("baseline-container", "children"),
     Input("trendline-choice", "checked"),
@@ -165,15 +177,25 @@ def switch_baseline_options(choice):
         return bleed_options
     return trendline_choice
 
-
+# Add / Delete trendline
 @callback(
     Output("add-trendline-container", "children"),
     Input("add-trendline", "n_clicks"),
+    Input({"type": "trendline-delete", "index": ALL}, "n_clicks"),
     prevent_initial_call=True
 )
-def add_trendline(n_clicks):
+def display_dropdowns(add_trendline, del_trendline):
     patched_children = Patch()
-    trendline = trendline_options(n_clicks)
-    patched_children.append(trendline)
+    if ctx.triggered_id != "add-trendline":
+        values_to_remove = []
+        for i, val in enumerate(del_trendline):
+            if val:
+                # add idx backwards to preserve deletion idx
+                values_to_remove.insert(0, i)
+        for v in values_to_remove:
+            del patched_children[v]
+    else:
+        trendline = trendline_options(add_trendline)
+        patched_children.append(trendline)
     return patched_children
     

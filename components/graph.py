@@ -130,12 +130,14 @@ graph = dcc.Graph(figure=fig, className='content', id="main-fig", config=configs
     Input({"type": "peak-height", "index": ALL}, "value"),
     Input({"type": "peak-width", "index": ALL}, "value"),
     Input({"type": "peak-skew", "index": ALL}, "value"),
+    Input({"type": "peak-delete", "index": ALL}, "n_clicks"),
     Input("noise-data", "data"),
     Input("baseline-shift", "value"),
     Input({"type": "baseline-start", "index": ALL}, "value"),
     Input({"type": "baseline-stop", "index": ALL}, "value"),
     Input({"type": "baseline-slope", "index": ALL}, "value"),
     Input({"type": "reset_baseline", "index": ALL}, "value"),
+    Input({"type": "trendline-delete", "index": ALL}, "n_clicks"),
     Input({"type": "bleed-start", "index": ALL}, "value"),
     Input({"type": "bleed-stop", "index": ALL}, "value"),
     Input({"type": "bleed-height", "index": ALL}, "value"),
@@ -158,12 +160,14 @@ def update_fig(
     heights,
     widths,
     skew_factor,
+    delete_peak,
     noise,
     baseline_shift,
     baseline_starts,
     baseline_stops,
     slope_factors,
     reset_baseline,
+    delete_trendline,
     bleed_start,
     bleed_stop,
     bleed_height,
@@ -178,10 +182,6 @@ def update_fig(
     integration_wlen,
     manual_integrations
     ):
-    # early return if no peak data yet
-    if not all([datapoints, centers, heights, widths, skew_factor]):
-        return no_update
-    
     # !! specific order of operations !!
     # some functions like bleed will overwrite some values
     # ensure data is added / manipulated to graph in correct order
@@ -204,7 +204,12 @@ def update_fig(
             y = add_trendline(y, trendline[0], trendline[1], trendline[2], trendline[3])
         
     # add noise
-    y += noise
+    # if no peaks have been added yet, initialize y to zeros
+    try:
+        y += noise
+    except TypeError:
+        y = np.zeros(x.size) + noise
+
 
     # adjust full baseline
     y += baseline_shift
