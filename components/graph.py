@@ -144,6 +144,7 @@ graph = dcc.Graph(figure=fig, className='content', id="main-fig", config=configs
     Input({"type": "bleed-slope", "index": ALL}, "value"),
     Input("annotations-options", "virtualRowData"), # trigger for re-arranging annotation rows
     Input("annotations-options", "cellRendererData"), # trigger for annotation checkboxes
+    Input("auto-integration", "checked"),
     Input("integration-width", "value"),
     Input("integration-height", "value"),
     Input("integration-threshold", "value"),
@@ -174,6 +175,7 @@ def update_fig(
     bleed_slope,
     annotation_order,
     add_annotation,
+    auto_integrate,
     integration_width,
     integration_height,
     integration_threshold,
@@ -215,12 +217,9 @@ def update_fig(
     y += baseline_shift
     
     patched_figure = Patch()
-    # clear any previous integrations and re-create original peak data
-    patched_figure["data"].clear()
-    patched_figure["data"].append(go.Scatter(x=x, y=y))
 
     if ctx.triggered_id == "main-fig":
-        print(manual_integrations.get("shapes"))
+        # print(manual_integrations.get("shapes"))
         # TODO add logic for integration shapes
         return no_update
     
@@ -229,7 +228,11 @@ def update_fig(
         patched_figure["layout"]["annotations"] = make_annotations(zip(names, centers, heights), annotation_order)
 
     # integrate peaks
-    integrations = integrate_peaks(x, y, integration_width, integration_height, integration_threshold, integration_distance, integration_prominence, integration_wlen)
-    patched_figure["data"].extend(integrations)
+    # clear any previous integrations and re-create original peak data
+    patched_figure["data"].clear()
+    patched_figure["data"].append(go.Scatter(x=x, y=y))
+    if auto_integrate:
+        integrations = integrate_peaks(x, y, integration_width, integration_height, integration_threshold, integration_distance, integration_prominence, integration_wlen)
+        patched_figure["data"].extend(integrations)
 
     return patched_figure

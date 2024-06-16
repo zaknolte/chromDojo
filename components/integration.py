@@ -21,45 +21,59 @@ integration_accordian = dmc.Accordion(
                     [
                         html.Div(
                             [
+                                html.P("Enable Autointegration:"),
+                                dmc.Switch(
+                                    id="auto-integration",
+                                    color="green",
+                                    onLabel=DashIconify(icon="quill:off"),
+                                    offLabel=DashIconify(icon="quill:off"),
+                                    size="xl",
+                                    checked=False
+                                ),
+                            ],
+                            className="accordian-options"
+                        ),
+                        html.Div(
+                            [
                                 html.P("Peak Width:", style={"margin-top": 10}),
                                 dbc.Input(type="number", value=0, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id="integration-width")
                             ],
-                            style={"display": "flex", "justify-content": "space-between", "align-items": "center"}
+                            className="accordian-options"
                         ),
                         html.Div(
                             [
                                 html.P("Peak Height:", style={"margin-top": 10}),
                                 dbc.Input(type="number", value=0, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id="integration-height")
                             ],
-                            style={"display": "flex", "justify-content": "space-between", "align-items": "center"}
+                            className="accordian-options"
                         ),
                         html.Div(
                             [
                                 html.P("Threshold:", style={"margin-top": 10}),
                                 dbc.Input(type="number", value=0, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id="integration-threshold")
                             ],
-                            style={"display": "flex", "justify-content": "space-between", "align-items": "center"}
+                            className="accordian-options"
                         ),
                         html.Div(
                             [
                                 html.P("Distance:", style={"margin-top": 10}),
                                 dbc.Input(type="number", value=1, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id="integration-distance")
                             ],
-                            style={"display": "flex", "justify-content": "space-between", "align-items": "center"}
+                            className="accordian-options"
                         ),
                         html.Div(
                             [
                                 html.P("Prominence:", style={"margin-top": 10}),
                                 dbc.Input(type="number", value=10, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id="integration-prominence")
                             ],
-                            style={"display": "flex", "justify-content": "space-between", "align-items": "center"}
+                            className="accordian-options"
                         ),
                         html.Div(
                             [
                                 html.P("Integration Width:", style={"margin-top": 10}),
                                 dbc.Input(type="number", value=50, min=5, style={"width": 100, "margin-left": 20}, className="sidebar-input", id="integration-wlen")
                             ],
-                            style={"display": "flex", "justify-content": "space-between", "align-items": "center"}
+                            className="accordian-options"
                         ),
                     ]
                 ),
