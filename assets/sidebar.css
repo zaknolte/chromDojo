@@ -80,10 +80,9 @@
   margin-left: 7rem;
   margin-right: 2rem;
   padding: 2rem 1rem;
-  margin-top: 5rem;
-  height: 800px;
+  margin-top: 1rem;
 }
 
 .sidebar:hover+.content {
-  margin-left: 22rem;
+  margin-left: 23rem;
 }
