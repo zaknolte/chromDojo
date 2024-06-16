@@ -50,7 +50,7 @@ integration_accordian = dmc.Accordion(
                         html.Div(
                             [
                                 html.P("Prominence:", style={"margin-top": 10}),
-                                dbc.Input(type="number", value=0, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id="integration-prominence")
+                                dbc.Input(type="number", value=10, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id="integration-prominence")
                             ],
                             style={"display": "flex", "justify-content": "space-between", "align-items": "center"}
                         ),
