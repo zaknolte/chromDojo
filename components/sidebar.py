@@ -6,6 +6,7 @@ from components.add_peaks import peak_accordian
 from components.noise import noise_accordian
 from components.baseline import baseline_accordian
 from components.annotations import annotations_accordian
+from components.integration import integration_accordian
 
 
 sidebar = html.Div(
@@ -27,6 +28,8 @@ sidebar = html.Div(
                 baseline_accordian,
                 html.Hr(),
                 annotations_accordian,
+                html.Hr(),
+                integration_accordian
             ],
             vertical=True,
             pills=True,

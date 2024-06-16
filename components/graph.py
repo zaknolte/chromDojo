@@ -3,7 +3,7 @@ from dash import dcc, callback, Output, Input, State, Patch, ALL, no_update, ctx
 import dash_bootstrap_components as dbc
 import numpy as np
 import peakutils
-from scipy.stats import skewnorm #add skewness to peaks
+from scipy.signal import find_peaks
 
 def calc_x(num_points):
     return np.linspace(0, num_points, num_points + 1)
@@ -12,7 +12,6 @@ def calc_noise(num_points, factor):
     return np.random.rand(num_points) * factor
 
 def create_peak(x, height, center, width, skew):
-    # return peakutils.gaussian(x, height, center, width)
     # current formula with skewness does not draw with width = 0
     # set to minimal sharp value to improve UX and not have peaks disappearing
     if width == 0:
@@ -68,19 +67,29 @@ def make_annotations(peaks, annotations_options):
             {
                 "text": text,
                 "x": peak[1],
-                "y": peak[2],
+                "y": peak[2] * 1.02,
             }
         )
     return annotations
-            
+
+def integrate_peaks(x, y, width, height, threshold, distance, prominence, wlen):
+    peaks = find_peaks(y, width=width, height=height, threshold=threshold, distance=distance, prominence=prominence, wlen=wlen)
+    integrations = []
+    for peak in range(len(peaks[1]["left_bases"])):
+        start, stop = peaks[1]["left_bases"][peak], peaks[1]["right_bases"][peak]
+        integrations.append(go.Scatter(x=x[start:stop], y=y[start:stop], fill="toself", mode='lines'))
+
+    return integrations
 
 fig = go.Figure(
         go.Scatter(
             x=[0],
             y=[0],
+            mode='lines'
         ),
         layout={
             'paper_bgcolor': 'rgba(0,0,0,0)',
+            "showlegend": False
         },
 )
 
@@ -133,6 +142,12 @@ graph = dcc.Graph(figure=fig, className='content', id="main-fig", config=configs
     Input({"type": "bleed-slope", "index": ALL}, "value"),
     Input("annotations-options", "virtualRowData"), # trigger for re-arranging annotation rows
     Input("annotations-options", "cellRendererData"), # trigger for annotation checkboxes
+    Input("integration-width", "value"),
+    Input("integration-height", "value"),
+    Input("integration-threshold", "value"),
+    Input("integration-distance", "value"),
+    Input("integration-prominence", "value"),
+    Input("integration-wlen", "value"),
     Input("main-fig", "relayoutData"), # shapes trigger relayout
     prevent_initial_call=True
 )
@@ -155,19 +170,18 @@ def update_fig(
     bleed_slope,
     annotation_order,
     add_annotation,
-    integrations
+    integration_width,
+    integration_height,
+    integration_threshold,
+    integration_distance,
+    integration_prominence,
+    integration_wlen,
+    manual_integrations
     ):
     # early return if no peak data yet
     if not all([datapoints, centers, heights, widths, skew_factor]):
         return no_update
     
-    if ctx.triggered_id == "main-fig":
-        print(integrations.get("shapes"))
-        # TODO add logic for integration shapes
-        return no_update
-
-    patched_figure = Patch()
-
     # !! specific order of operations !!
     # some functions like bleed will overwrite some values
     # ensure data is added / manipulated to graph in correct order
@@ -195,11 +209,22 @@ def update_fig(
     # adjust full baseline
     y += baseline_shift
     
+    patched_figure = Patch()
+    # clear any previous integrations and re-create original peak data
+    patched_figure["data"].clear()
+    patched_figure["data"].append(go.Scatter(x=x, y=y))
+
+    if ctx.triggered_id == "main-fig":
+        print(manual_integrations.get("shapes"))
+        # TODO add logic for integration shapes
+        return no_update
+    
     # add annotations
     if any([field["Add to Plot"] for field in annotation_order]):
         patched_figure["layout"]["annotations"] = make_annotations(zip(names, centers, heights), annotation_order)
 
-    patched_figure["data"][0]["x"] = x
-    patched_figure["data"][0]["y"] = y
+    # integrate peaks
+    integrations = integrate_peaks(x, y, integration_width, integration_height, integration_threshold, integration_distance, integration_prominence, integration_wlen)
+    patched_figure["data"].extend(integrations)
 
     return patched_figure
