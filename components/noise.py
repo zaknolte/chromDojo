@@ -35,7 +35,7 @@ noise_accordian = dmc.Accordion(
 
 
 # noise needs to be calculated and stored separately to keep it 'static' until explicitly changed
-# otherwise it gets recalculated on every single update to fig
+# otherwise it gets recalculated on every single update to fig resulting in bad UX
 @callback(
     Output("noise-data", "data"),
     Input("graph-datapoints", "value"),
