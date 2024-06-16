@@ -44,11 +44,14 @@ annotations_accordian = dmc.Accordion(
                                 {"Field": "Peak Name", "Add to Plot": False},
                                 {"Field": "RT", "Add to Plot": False},
                                 {"Field": "Concentration", "Add to Plot": False},
+                                {"Field": "Area", "Add to Plot": False},
+                                {"Field": "Height", "Add to Plot": False},
                             ],
                             dashGridOptions={
                                 "domLayout": "autoHeight",
                                 "animateRows": True,
                                 "rowDragManaged": True,
+                                "suppressCellFocus": True
                                 },
                             # columnSize="sizeToFit",
                             style={"width": 300, "height": None},

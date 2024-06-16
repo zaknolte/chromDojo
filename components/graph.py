@@ -62,7 +62,11 @@ def make_annotations(peaks, annotations_options):
             if option["Field"] == "RT" and option["Add to Plot"]:
                 text += f"RT: {peak[1]}<br>"
             if option["Field"] == "Concentration" and option["Add to Plot"]:
-                text += f"Conc: {peak[2]}<br>" #TODO add integration concentrations
+                text += f"Conc: some conc here<br>" #TODO add integration concentrations
+            if option["Field"] == "Area" and option["Add to Plot"]:
+                text += f"Area: some area here<br>"
+            if option["Field"] == "Height" and option["Add to Plot"]:
+                text += f"RT: {peak[2]}<br>"
         annotations.append(
             {
                 "text": text,
@@ -119,7 +123,7 @@ configs = {
     "displayModeBar": True,
 }
 
-graph = dcc.Graph(figure=fig, className='content', id="main-fig", config=configs)
+graph = dcc.Graph(figure=fig, id="main-fig", config=configs, style={"height": 800})
 
 
 @callback(
@@ -144,6 +148,7 @@ graph = dcc.Graph(figure=fig, className='content', id="main-fig", config=configs
     Input({"type": "bleed-slope", "index": ALL}, "value"),
     Input("annotations-options", "virtualRowData"), # trigger for re-arranging annotation rows
     Input("annotations-options", "cellRendererData"), # trigger for annotation checkboxes
+    Input("annotations-options", "cellClicked"), # trigger for clicking a cell that contains a checkbox (cell clicks check box but don't trigger checkbox callback)
     Input("auto-integration", "checked"),
     Input("integration-width", "value"),
     Input("integration-height", "value"),
@@ -174,7 +179,8 @@ def update_fig(
     bleed_height,
     bleed_slope,
     annotation_order,
-    add_annotation,
+    add_annotation_checkbox_click,
+    add_annotation_cell_click,
     auto_integrate,
     integration_width,
     integration_height,
