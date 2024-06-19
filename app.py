@@ -24,7 +24,7 @@ app.layout = dmc.MantineProvider(
             html.Div(
                 [
                     graph,
-                    data_tab
+                    # data_tab
                 ],
                 className="content"
             )
