@@ -14,6 +14,7 @@ dash_ag_grid==31.2.0
 dash_mantine_components==0.14.3
 dill==0.3.8
 Flask==3.0.3
+gunicorn==22.0.0
 idna==3.7
 importlib_metadata==7.1.0
 itsdangerous==2.2.0
