@@ -14,6 +14,8 @@ app = dash.Dash(
     external_stylesheets=[dbc.themes.DARKLY, dbc.icons.FONT_AWESOME],
 )
 
+server = app.server
+
 # mantine provider required root wrapper for using mantine components ANYWHERE in app
 app.layout = dmc.MantineProvider(
     html.Div(
