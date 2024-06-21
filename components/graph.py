@@ -4,6 +4,8 @@ import dash_bootstrap_components as dbc
 import numpy as np
 import peakutils
 from scipy.signal import find_peaks
+from components.Peak import Peak
+import jsonpickle
 
 def calc_x(num_points):
     return np.linspace(0, num_points, num_points + 1) / 60
@@ -11,21 +13,10 @@ def calc_x(num_points):
 def calc_noise(num_points, factor):
     return np.random.rand(num_points) * factor
 
-def create_peak(x, height, center, width, skew):
-    # current formula with skewness does not draw with width = 0
-    # set to minimal sharp value to improve UX and not have peaks disappearing
-    if width == 0:
-        width = 0.1
-    # https://www.desmos.com/calculator/gokr63ciym
-    return height * np.exp(-0.5 * ((x - center) / (width + (skew * (x - center))))**2)
-    # https://www.desmos.com/calculator/k5y9glwjee   ??
-    # https://math.stackexchange.com/questions/3605861/what-is-the-graph-function-of-a-skewed-normal-distribution-curve
-    # https://cremerlab.github.io/hplc-py/methodology/fitting.html
-
 def calc_y(peaks):
     y = 0
     for peak in peaks:
-        y += peak
+        y += peak.y
     
     return y
 
@@ -58,29 +49,37 @@ def make_annotations(peaks, annotations_options):
         text = ""
         for option in annotations_options:
             if option["Field"] == "Peak Name" and option["Add to Plot"]:
-                text += f"{peak[0]}<br>"
+                text += f"{peak.name}<br>"
             if option["Field"] == "RT" and option["Add to Plot"]:
-                text += f"RT: {peak[1]} min<br>"
+                text += f"RT: {peak.center:.2f} min<br>"
             if option["Field"] == "Concentration" and option["Add to Plot"]:
-                text += f"Conc: some conc here<br>" #TODO add integration concentrations
+                text += f"Conc: {peak.concentration:.2f}<br>" #TODO add integration concentrations
             if option["Field"] == "Area" and option["Add to Plot"]:
-                text += f"Area: some area here<br>"
+                text += f"Area: {peak.area:.2f}<br>"
             if option["Field"] == "Height" and option["Add to Plot"]:
-                text += f"Height: {peak[2]}<br>"
+                text += f"Height: {peak.height:.2f}<br>"
         annotations.append(
             {
                 "text": text,
-                "x": peak[1],
-                "y": peak[2] * 1.02,
+                "x": peak.center,
+                "y": peak.height * 1.04,
             }
         )
+
     return annotations
 
-def integrate_peaks(x, y, width, height, threshold, distance, prominence, wlen):
+def integrate_peaks(peak_list, x, y, width, height, threshold, distance, prominence, wlen):
     peaks = find_peaks(y, width=width, height=height, threshold=threshold, distance=distance, prominence=prominence, wlen=wlen)
     integrations = []
-    for peak in range(len(peaks[1]["left_bases"])):
-        start, stop = peaks[1]["left_bases"][peak], peaks[1]["right_bases"][peak]
+    baseline = peakutils.baseline(y)
+    for i in range(len(peaks[1]["left_bases"])):
+        for peak in peak_list:
+            if peak.center == peaks[0][i] / 60:
+                start, stop = peaks[1]["left_bases"][i], peaks[1]["right_bases"][i]
+                auc = np.trapz(y[start:stop], x[start:stop]) - np.trapz(baseline[start:stop], x[start:stop])
+                peak.start_idx = start
+                peak.stop_idx = stop
+                peak.area = auc
         integrations.append(go.Scatter(x=x[start:stop], y=y[start:stop], fill="toself", mode='lines'))
 
     return integrations
@@ -197,8 +196,9 @@ def update_fig(
 
     # add peaks
     x = calc_x(datapoints)
-    peaks = (create_peak(x, peak[0], peak[1], peak[2], peak[3]) for peak in zip(heights, centers, widths, skew_factor))
-    y = calc_y(peaks)
+    # peaks = (create_peak(x, peak[0], peak[1], peak[2], peak[3]) for peak in zip(heights, centers, widths, skew_factor))
+    peak_list = [Peak(peak[0], x, peak[1], peak[2], peak[3], peak[4]) for peak in zip(names, heights, centers, widths, skew_factor)]
+    y = calc_y(peak_list)
 
     # add bleed
     if all([bleed_start, bleed_stop, bleed_height, bleed_slope]):
@@ -229,17 +229,20 @@ def update_fig(
         # print(manual_integrations.get("shapes"))
         # TODO add logic for integration shapes
         return no_update
-    
-    # add annotations
-    if any([field["Add to Plot"] for field in annotation_order]):
-        patched_figure["layout"]["annotations"] = make_annotations(zip(names, centers, heights), annotation_order)
 
     # integrate peaks
     # clear any previous integrations and re-create original peak data
     patched_figure["data"].clear()
     patched_figure["data"].append(go.Scatter(x=x, y=y))
     if auto_integrate:
-        integrations = integrate_peaks(x, y, integration_width, integration_height, integration_threshold, integration_distance, integration_prominence, integration_wlen)
+        integrations = integrate_peaks(peak_list, x, y, integration_width, integration_height, integration_threshold, integration_distance, integration_prominence, integration_wlen)
         patched_figure["data"].extend(integrations)
+    else:
+        for peak in peak_list:
+            peak.clear_integration()
+    
+    # add annotations
+    if annotation_order is not None and any([field["Add to Plot"] for field in annotation_order]):
+        patched_figure["layout"]["annotations"] = make_annotations(peak_list, annotation_order)
 
-    return patched_figure, {"x": x, "y": y}
+    return patched_figure, {"x": x, "y": y, "peaks": jsonpickle.encode(peak_list)}

@@ -7,6 +7,7 @@ from dash_iconify import DashIconify
 import numpy as np
 import peakutils
 from scipy.signal import find_peaks
+import jsonpickle
 
 data_tab = html.Div(
     [
@@ -69,35 +70,20 @@ data_tab = html.Div(
 @callback(
     Output("results-table", "rowData"),
     Input("x-y-data", "data"),
-    Input({'type': 'peak-edit-name', 'index': ALL}, "value"),
-    State({"type": "peak-center", "index": ALL}, "value"),
-    State("auto-integration", "checked"),
-    State("integration-width", "value"),
-    State("integration-height", "value"),
-    State("integration-threshold", "value"),
-    State("integration-distance", "value"),
-    State("integration-prominence", "value"),
-    State("integration-wlen", "value"),
     prevent_initial_call=True
 )
-def update_results_table(graph_data, peak_names, centers, integrations, width, height, threshold, distance, prominence, wlen):
-    if graph_data["y"]:
-        y = np.asarray(graph_data["y"])
+def update_results_table(graph_data):
+    if graph_data is not None and any(graph_data["y"]):
+        peaks = jsonpickle.decode(graph_data["peaks"])
         row_data = []
-        baseline = peakutils.baseline(y)
-        peaks = find_peaks(y, width=width, height=height, threshold=threshold, distance=distance, prominence=prominence, wlen=wlen)[1]
 
-        for i in range(len(peaks["left_bases"])):
-            start, stop = peaks["left_bases"][i], peaks["right_bases"][i]
-            auc = 0
-            if integrations:
-                auc = np.trapz(y[start:stop], graph_data["x"][start:stop]) - np.trapz(baseline[start:stop], graph_data["x"][start:stop])
+        for peak in peaks:
             row_data.append(
                 {
-                    "RT": f"{centers[i]} min",
-                    "Name": peak_names[i],
-                    "Height": peaks["peak_heights"][i],
-                    "Area": f"{auc:.4f}",
+                    "RT": f"{peak.center:.2f} min",
+                    "Name": peak.name,
+                    "Height": f"{peak.height:.2f}",
+                    "Area": f"{peak.area:.2f}",
                     "Concentration": "N/A",
                     "Units": "N/A"
                 }
