@@ -6,7 +6,7 @@ import peakutils
 from scipy.signal import find_peaks
 
 def calc_x(num_points):
-    return np.linspace(0, num_points, num_points + 1)
+    return np.linspace(0, num_points, num_points + 1) / 60
 
 def calc_noise(num_points, factor):
     return np.random.rand(num_points) * factor
@@ -60,13 +60,13 @@ def make_annotations(peaks, annotations_options):
             if option["Field"] == "Peak Name" and option["Add to Plot"]:
                 text += f"{peak[0]}<br>"
             if option["Field"] == "RT" and option["Add to Plot"]:
-                text += f"RT: {peak[1]}<br>"
+                text += f"RT: {peak[1]} min<br>"
             if option["Field"] == "Concentration" and option["Add to Plot"]:
                 text += f"Conc: some conc here<br>" #TODO add integration concentrations
             if option["Field"] == "Area" and option["Add to Plot"]:
                 text += f"Area: some area here<br>"
             if option["Field"] == "Height" and option["Add to Plot"]:
-                text += f"RT: {peak[2]}<br>"
+                text += f"Height: {peak[2]}<br>"
         annotations.append(
             {
                 "text": text,
@@ -128,6 +128,7 @@ graph = dcc.Graph(figure=fig, id="main-fig", config=configs, style={"height": 80
 
 @callback(
     Output("main-fig", "figure"),
+    Output("x-y-data", "data"),
     Input("graph-datapoints", "value"),
     Input({'type': 'peak-edit-name', 'index': ALL}, "value"),
     Input({"type": "peak-center", "index": ALL}, "value"),
@@ -241,4 +242,4 @@ def update_fig(
         integrations = integrate_peaks(x, y, integration_width, integration_height, integration_threshold, integration_distance, integration_prominence, integration_wlen)
         patched_figure["data"].extend(integrations)
 
-    return patched_figure
+    return patched_figure, {"x": x, "y": y}
