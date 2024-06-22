@@ -75,7 +75,7 @@ def peak_options(n_clicks):
                             html.Div(
                                 [
                                     html.P("Peak Width:", style={"margin-top": 10}),
-                                    dbc.Input(type="number", value=0, min=0, step=0.1, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "peak-width", "index": n_clicks})
+                                    dbc.Input(type="number", value=0, min=0, step=0.01, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "peak-width", "index": n_clicks})
                                 ],
                                 className="accordian-options"
                             ),
