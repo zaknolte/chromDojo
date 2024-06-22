@@ -7,18 +7,19 @@ class Calibration:
         self.points.append(point)
         self.sort_points()
 
-    def delete_point(self, point):
-        for p in self.points[::-1]:
-            if p.name == point.name:
-                del p
+    def delete_point(self, level):
+        for i, p in enumerate(self.points[::-1]):
+            if p.name == level:
+                self.points.pop(~i)
+        self.sort_points()
 
     def rename_points(self):
-        self.points = self.sort_points()
+        self.sort_points()
         for i, point in enumerate(self.points, start=1):
-            point.name = f"Cal {i}"
+            point.name = i
 
     def sort_points(self):
-        self.points = sorted(self.points, lambda x: x.name)
+        self.points = sorted(self.points, key=lambda x: x.name)
 
 class calPoint:
     def __init__(self, name, x, y) -> None:
