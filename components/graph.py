@@ -92,28 +92,22 @@ fig = go.Figure(
         ),
         layout={
             'paper_bgcolor': 'rgba(0,0,0,0)',
-            "showlegend": False
+            "showlegend": False,
+            "xaxis": {
+                "color": "white",
+                "title": {
+                    "text": "Time",
+                },
+                "showgrid": False
+            },
+            "yaxis": {
+                "color": "white",
+                "title": {
+                    "text": "Abundance",
+                },
+                "showgrid": False
+            }
         },
-)
-
-fig.update_xaxes(
-    {
-        "color": "white",
-        "title": {
-            "text": "Time",
-        },
-        "showgrid": False
-    },
-)
-
-fig.update_yaxes(
-    {
-        "color": "white",
-        "title": {
-            "text": "Intensity",
-        },
-        "showgrid": False
-    }
 )
 
 configs = {
@@ -122,7 +116,12 @@ configs = {
     "displayModeBar": True,
 }
 
-graph = dcc.Graph(figure=fig, id="main-fig", config=configs, style={"height": 800})
+graph = dcc.Graph(
+    figure=fig, 
+    id="main-fig", 
+    config=configs, 
+    style={"height": 800}
+)
 
 
 @callback(
@@ -245,4 +244,6 @@ def update_fig(
     if annotation_order is not None and any([field["Add to Plot"] for field in annotation_order]):
         patched_figure["layout"]["annotations"] = make_annotations(peak_list, annotation_order)
 
+    # dcc.Store can't store raw python objects
+    # json serialize first then deserialize when needed to access peaks
     return patched_figure, {"x": x, "y": y, "peaks": jsonpickle.encode(peak_list)}
