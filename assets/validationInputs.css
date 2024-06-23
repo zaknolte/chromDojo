@@ -12,3 +12,13 @@ input:invalid {
     background-color: #e4e8ee;
     width: 90%;
 }
+
+.mantine-Select-dropdown {
+    color: black
+}
+
+/* can't place custom dash buttons on graph canvas
+shift graph margin over buttons then place buttons on top */
+.mantine-Select-wrapper {
+    z-index: 50;
+}
