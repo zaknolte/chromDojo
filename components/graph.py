@@ -4,7 +4,7 @@ import dash_bootstrap_components as dbc
 import numpy as np
 import peakutils
 from scipy.signal import find_peaks
-from components.Peak import Peak
+from components.Compound import Compound
 import jsonpickle
 
 def calc_x(num_points):
@@ -84,6 +84,29 @@ def integrate_peaks(peak_list, x, y, width, height, threshold, distance, promine
 
     return integrations
 
+def update_peaks(peak_data, x, names, heights, centers, widths, skew_factor):
+    current_peaks = jsonpickle.decode(peak_data["peaks"])
+    all_peaks = [Compound(peak[0], x, peak[1], peak[2], peak[3], peak[4]) for peak in zip(names, heights, centers, widths, skew_factor)]
+    names = [i.name for i in current_peaks]
+    for peak in all_peaks:
+        # add new peak if it doesn't exist yet
+        if peak.name not in names:
+            current_peaks.append(peak)
+        else:
+            # just update values if it already exists
+            # make sure not to overwrite any existing calibration data
+            for curr in current_peaks:
+                if curr.name == peak.name:
+                    curr.name = peak.name
+                    curr.x = x
+                    curr.y = curr.create_peak()
+                    curr.height = peak.height
+                    curr.center = peak.center
+                    curr.width = peak.width
+                    curr.skew = peak.skew
+
+    return current_peaks
+
 fig = go.Figure(
         go.Scatter(
             x=[0],
@@ -156,6 +179,7 @@ graph = dcc.Graph(
     Input("integration-prominence", "value"),
     Input("integration-wlen", "value"),
     Input("main-fig", "relayoutData"), # shapes trigger relayout
+    State("x-y-data", "data"),
     prevent_initial_call=True
 )
 def update_fig(
@@ -187,7 +211,8 @@ def update_fig(
     integration_distance,
     integration_prominence,
     integration_wlen,
-    manual_integrations
+    manual_integrations,
+    peak_data
     ):
     # !! specific order of operations !!
     # some functions like bleed will overwrite some values
@@ -195,8 +220,13 @@ def update_fig(
 
     # add peaks
     x = calc_x(datapoints)
-    # peaks = (create_peak(x, peak[0], peak[1], peak[2], peak[3]) for peak in zip(heights, centers, widths, skew_factor))
-    peak_list = [Peak(peak[0], x, peak[1], peak[2], peak[3], peak[4]) for peak in zip(names, heights, centers, widths, skew_factor)]
+    if peak_data is not None:
+        # make sure to just update peak if it already exists
+        # otherwise it will be overwritten with a new instance
+        peak_list = update_peaks(peak_data, x, names, heights, centers, widths, skew_factor)
+    else:
+        peak_list = [Compound(peak[0], x, peak[1], peak[2], peak[3], peak[4]) for peak in zip(names, heights, centers, widths, skew_factor)]
+
     y = calc_y(peak_list)
 
     # add bleed
