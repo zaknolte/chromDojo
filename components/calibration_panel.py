@@ -242,18 +242,43 @@ def add_calibrator(n_clicks, compound, peak_data):
     prevent_initial_call=True,
 )
 def update_calibrators(new_data, row_data, regression_type, weighting, compound, peak_data):
+    def get_r_squared(coefs):
+        fit = np.poly1d(coefs)
+        yhat = fit(x)
+        ybar = np.sum(y)/len(y)
+        ssreg = np.sum((yhat-ybar)**2)
+        sstot = np.sum((y - ybar)**2)
+        return ssreg / sstot
+    
     rows = no_update
     peaks = jsonpickle.decode(peak_data["peaks"])
     # cellRendererData ctx is the delete button
     if ctx.triggered[0]["prop_id"] == "calibration-table.cellRendererData":
-        rows = get_delete_rows(peaks, compound, row_data)
+        for peak in peaks:
+            if peak.name == compound:
+                peak.calibration.delete_point(int(row_data["rowIndex"]) + 1)
+                peak.calibration.rename_points()
 
+                rows = []
+                for cal in peak.calibration.points:
+                    rows.append(
+                        {
+                            "Level": cal.name,
+                            "Concentration": cal.x,
+                            "Abundance": cal.y,
+                            "Use": cal.used,
+                            "Delete": "X"
+                        }
+                    )
+
+    # create the cal curve graph when updating points or switching compounds
     patched_fig = Patch()
     for peak in peaks:
         if peak.name == compound:
             traces = []
             x = []
             y = []
+            # build cal points
             for cal in peak.calibration.points:
                 if cal.name == new_data[0]["data"]["Level"]:
                     cal.x = new_data[0]["data"]["Concentration"]
@@ -280,108 +305,85 @@ def update_calibrators(new_data, row_data, regression_type, weighting, compound,
                     }
 
                 traces.append(go.Scatter(x=[cal.x], y=[cal.y], mode="markers", marker=marker))
+
             
-            regression, annotation = get_regression_trace(x, y, regression_type, weighting)
-            traces.append(regression)
+            text = ""
+            x = np.asarray(x)
+            y = np.asarray(y)
+
+            weights = {
+                "none": None,
+                "1x": 1 / x,
+                "1x2": 1 / (x * x),
+                "1y": 1 / y,
+                "1y2": 1 / (y * y),
+            }
+
+            w = weights[weighting]
+            # build curves
+            if regression_type == "linear":
+                coefs = np.polyfit(x, y, 1)
+                r2 = get_r_squared(coefs)
+
+                y_fit = coefs[0] * x + coefs[1]
+
+                const_sign = "+" if coefs[1] > 0 else ""
+
+                text += f"{coefs[0]:.4g}x {const_sign} {coefs[1]:.4g}"
+
+            elif regression_type == "quadratic":
+                coefs = np.polyfit(x, y, 2)
+                r2 = get_r_squared(coefs)
+                # add additional points to plot a smoother curve
+                x = np.linspace(np.min(x), np.max(x), 20)
+                y_fit = (coefs[0] * x * x) + (coefs[1] * x) + coefs[2]
+
+                slope_sign = "+" if coefs[1] > 0 else ""
+                const_sign = "+" if coefs[2] > 0 else ""
+
+                text += f"{coefs[0]:.4g}x^2 {slope_sign} {coefs[1]:.4g}x {const_sign} {coefs[2]:.4g}"
+
+            elif regression_type == "response-factor":
+                if "x" in weighting:
+                    pass 
+                coefs = np.linalg.lstsq(np.asarray(x).reshape(-1,1), y)[0]
+                r2 = get_r_squared(coefs)
+                y_fit = x * coefs[0]
+
+                text += f"{coefs[0]:.4g}x"
+            
+            peak.calibration.type = regression_type
+            peak.calibration.weighting = weighting
+            peak.calibration.coefficients = coefs
+
+            if regression_type != "response-factor":
+                text += f"<br>r2 = {r2:.5f}"
+
+            annotation = [
+                {
+                    "text": text,
+                    "xref": "paper",
+                    "yref": "paper",
+                    "x": 0.07,
+                    "y": 0.95,
+                    "showarrow": False,
+                    "textfont": {
+                        "color": "darkgrey"
+                    }
+                }
+            ]
+
+            traces.append(
+                go.Scatter(
+                    x=x,
+                    y=y_fit,
+                    mode="lines",
+                    marker={"color": "darkgrey"},
+                )
+            )
+
             patched_fig["layout"]["annotations"] = annotation
+            patched_fig["layout"]["xaxis"]["title"]["text"] = f"Concentration ({peak.calibration.units})"
             patched_fig["data"] = traces
     
     return patched_fig, rows, {"x": peak_data["x"], "y": peak_data["y"], "peaks": jsonpickle.encode(peaks)}
-
-def get_delete_rows(peaks, compound, row_data):
-    rows = no_update
-    for peak in peaks:
-        if peak.name == compound:
-            peak.calibration.delete_point(int(row_data["rowIndex"]) + 1)
-            peak.calibration.rename_points()
-
-            rows = []
-            for cal in peak.calibration.points:
-                rows.append(
-                    {
-                        "Level": cal.name,
-                        "Concentration": cal.x,
-                        "Abundance": cal.y,
-                        "Use": cal.used,
-                        "Delete": "X"
-                    }
-                )
-    return rows
-
-def get_regression_trace(x, y, regression_type, weighting):
-    def get_r_squared(coefs):
-        fit = np.poly1d(coefs)
-        yhat = fit(x)
-        ybar = np.sum(y)/len(y)
-        ssreg = np.sum((yhat-ybar)**2)
-        sstot = np.sum((y - ybar)**2)
-        return ssreg / sstot
-    
-    text = ""
-    x = np.asarray(x)
-    y = np.asarray(y)
-
-    weights = {
-        "none": None,
-        "1x": 1 / x,
-        "1x2": 1 / (x * x),
-        "1y": 1 / y,
-        "1y2": 1 / (y * y),
-    }
-
-    w = weights[weighting]
-    
-    if regression_type == "linear":
-        coefs = np.polyfit(x, y, 1)
-        r2 = get_r_squared(coefs)
-
-        y_fit = coefs[0] * x + coefs[1]
-
-        const_sign = "+" if coefs[1] > 0 else ""
-
-        text += f"{coefs[0]:.4g}x {const_sign} {coefs[1]:.4g}"
-
-    elif regression_type == "quadratic":
-        coefs = np.polyfit(x, y, 2)
-        r2 = get_r_squared(coefs)
-        # add additional points to plot a smoother curve
-        x = np.linspace(np.min(x), np.max(x), 20)
-        y_fit = (coefs[0] * x * x) + (coefs[1] * x) + coefs[2]
-
-        slope_sign = "+" if coefs[1] > 0 else ""
-        const_sign = "+" if coefs[2] > 0 else ""
-
-        text += f"{coefs[0]:.4g}x^2 {slope_sign} {coefs[1]:.4g}x {const_sign} {coefs[2]:.4g}"
-
-    elif regression_type == "response-factor":
-        if "x" in weighting:
-            pass 
-        coefs = np.linalg.lstsq(np.asarray(x).reshape(-1,1), y)[0]
-        r2 = get_r_squared(coefs)
-        y_fit = x * coefs[0]
-
-        text += f"{coefs[0]:.4g}x"
-
-    if regression_type != "response-factor":
-        text += f"<br>r2 = {r2:.5f}"
-
-    annotation = [
-        {
-            "text": text,
-            "xref": "paper",
-            "yref": "paper",
-            "x": 0.07,
-            "y": 0.95,
-            "showarrow": False,
-            "textfont": {
-                "color": "darkgrey"
-            }
-        }
-    ]
-
-    return go.Scatter(
-        x=x,
-        y=y_fit,
-        mode="lines",
-        marker={"color": "darkgrey"},
-    ), annotation
