@@ -8,6 +8,7 @@ import numpy as np
 import peakutils
 from scipy.signal import find_peaks
 import jsonpickle
+import datetime
 
 results_panel = dmc.TabsPanel(
     dag.AgGrid(
@@ -86,6 +87,7 @@ def update_results_table(graph_data):
 
 @callback(
     Output("x-y-data", "data", allow_duplicate=True),
+    Output("table-updates", "data", allow_duplicate=True),
     Input("results-table", "cellValueChanged"),
     State("x-y-data", "data"),
     prevent_initial_call=True
@@ -95,4 +97,4 @@ def update_units(units, graph_data):
     for peak in peaks:
         if peak.name == units[0]["data"]["Name"]:
             peak.calibration.units = units[0]["data"]["Units"]
-    return {"x": graph_data["x"], "y": graph_data["y"], "peaks": jsonpickle.encode(peaks)}
+    return {"x": graph_data["x"], "y": graph_data["y"], "peaks": jsonpickle.encode(peaks)}, datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")

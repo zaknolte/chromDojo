@@ -9,6 +9,7 @@ import numpy as np
 import peakutils
 from scipy.signal import find_peaks
 import jsonpickle
+import datetime
 
 from components.Calibration import calPoint
 
@@ -233,6 +234,7 @@ def add_calibrator(n_clicks, compound, peak_data):
     Output("calibration-curve", "figure"),
     Output("calibration-table", "rowData", allow_duplicate=True),
     Output("x-y-data", "data", allow_duplicate=True),
+    Output("table-updates", "data", allow_duplicate=True),
     Input("calibration-table", "cellValueChanged"),
     Input("calibration-table", "cellRendererData"),
     Input("regression-select", "value"),
@@ -323,6 +325,8 @@ def update_calibrators(new_data, row_data, regression_type, weighting, compound,
             # build curves
             if regression_type == "linear":
                 coefs = np.polyfit(x, y, 1)
+                # add additional points to plot a smoother curve
+                x = np.linspace(np.min(x), np.max(x), 20)
                 r2 = get_r_squared(coefs)
 
                 y_fit = coefs[0] * x + coefs[1]
@@ -347,6 +351,8 @@ def update_calibrators(new_data, row_data, regression_type, weighting, compound,
                 if "x" in weighting:
                     pass 
                 coefs = np.linalg.lstsq(np.asarray(x).reshape(-1,1), y)[0]
+                # add additional points to plot a smoother curve
+                x = np.linspace(np.min(x), np.max(x), 20)
                 r2 = get_r_squared(coefs)
                 y_fit = x * coefs[0]
 
@@ -386,4 +392,4 @@ def update_calibrators(new_data, row_data, regression_type, weighting, compound,
             patched_fig["layout"]["xaxis"]["title"]["text"] = f"Concentration ({peak.calibration.units})"
             patched_fig["data"] = traces
     
-    return patched_fig, rows, {"x": peak_data["x"], "y": peak_data["y"], "peaks": jsonpickle.encode(peaks)}
+    return patched_fig, rows, {"x": peak_data["x"], "y": peak_data["y"], "peaks": jsonpickle.encode(peaks)}, datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
