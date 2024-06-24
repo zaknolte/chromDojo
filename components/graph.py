@@ -191,8 +191,8 @@ graph = dcc.Graph(
     Input("integration-prominence", "value"),
     Input("integration-wlen", "value"),
     Input("main-fig", "relayoutData"), # shapes trigger relayout
-    Input("table-updates", "data"), # make sure to update fig after minor updates to cals / results table
     State("x-y-data", "data"),
+    Input("table-updates", "data"), # make sure to update fig after minor updates to cals / results table
     prevent_initial_call=True
 )
 def update_fig(
