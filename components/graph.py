@@ -26,10 +26,10 @@ def add_trendline(y, start, stop, factor, reset):
         for i in range(len(y_slice)):
             y_slice[i] += (i * factor)
         
-        y[start: stop] = y_slice
+        y[start: stop] += y_slice
 
         if not reset:
-            y[stop:] = y_slice[-1]
+            y[stop:] += y_slice[-1]
 
     return y
 
@@ -191,6 +191,7 @@ graph = dcc.Graph(
     Input("integration-prominence", "value"),
     Input("integration-wlen", "value"),
     Input("main-fig", "relayoutData"), # shapes trigger relayout
+    Input("table-updates", "data"), # make sure to update fig after minor updates to cals / results table
     State("x-y-data", "data"),
     prevent_initial_call=True
 )
@@ -224,7 +225,8 @@ def update_fig(
     integration_prominence,
     integration_wlen,
     manual_integrations,
-    peak_data
+    peak_data,
+    table_updates
     ):
     # !! specific order of operations !!
     # some functions like bleed will overwrite some values
@@ -237,7 +239,7 @@ def update_fig(
         # otherwise it will be overwritten with a new instance
         peak_list = update_peaks(peak_data, x, names, heights, centers, widths, skew_factor)
     else:
-        peak_list = [Compound(peak[0], x, peak[2], peak[3], peak[4], peak[5]) for peak in zip(names, heights, centers, widths, skew_factor)]
+        peak_list = [Compound(peak[0], x, peak[1], peak[2], peak[3], peak[4]) for peak in zip(names, heights, centers, widths, skew_factor)]
 
     y = calc_y(peak_list)
 
@@ -245,13 +247,13 @@ def update_fig(
     if all([bleed_start, bleed_stop, bleed_height, bleed_slope]):
         # have to use pattern matching callbacks since component only conditionally exists even though there's only one option
         # should always be list of single value
-        y = add_bleed(y, bleed_start[0], bleed_stop[0], bleed_height[0], bleed_slope[0])
+        y = add_bleed(y, bleed_start[0] * 60, bleed_stop[0] * 60, bleed_height[0], bleed_slope[0] * 60)
 
     # add baselines
     if all([baseline_starts, baseline_stops, slope_factors, reset_baseline]):
         # pattern matching callback - grabs all dynamically created baseline options
         for trendline in zip(baseline_starts, baseline_stops, slope_factors, reset_baseline):
-            y = add_trendline(y, trendline[0], trendline[1], trendline[2], trendline[3])
+            y = add_trendline(y, trendline[0] * 60, trendline[1] * 60, trendline[2] / 60, trendline[3])
         
     # add noise
     # if no peaks have been added yet, initialize y to zeros
