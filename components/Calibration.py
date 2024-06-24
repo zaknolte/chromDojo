@@ -1,6 +1,5 @@
 class Calibration:
-    def __init__(self, compound) -> None:
-        self.compound = compound
+    def __init__(self) -> None:
         self.points = []
         self.type = None
         self.weighting = None

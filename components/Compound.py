@@ -18,7 +18,7 @@ class Compound:
         self.stop_idx = 0
         self.concentration = 0
         self.unit = "ppm"
-        self.calibration = Calibration(self)
+        self.calibration = Calibration()
 
         self.y = self.create_peak()
 
