@@ -53,7 +53,7 @@ def make_annotations(peaks, annotations_options):
             if option["Field"] == "RT" and option["Add to Plot"]:
                 text += f"RT: {peak.center:.2f} min<br>"
             if option["Field"] == "Concentration" and option["Add to Plot"]:
-                text += f"Conc: {peak.concentration:.2f}<br>" #TODO add integration concentrations
+                text += f"Conc: {peak.calibration.calculate_concentration(peak.area):.2f} {peak.calibration.units}<br>" #TODO add integration concentrations
             if option["Field"] == "Area" and option["Add to Plot"]:
                 text += f"Area: {peak.area:.2f}<br>"
             if option["Field"] == "Height" and option["Add to Plot"]:
@@ -88,22 +88,34 @@ def update_peaks(peak_data, x, names, heights, centers, widths, skew_factor):
     current_peaks = jsonpickle.decode(peak_data["peaks"])
     all_peaks = [Compound(peak[0], x, peak[1], peak[2], peak[3], peak[4]) for peak in zip(names, heights, centers, widths, skew_factor)]
     names = [i.name for i in current_peaks]
+    try:
+        # make sure to update the name of the peak if it is edited to avoid adding a copy of it
+        if ctx.triggered_id["type"] == "peak-edit-name":
+            names = [ctx.inputs[i] for i in ctx.inputs if "peak-edit-name" in i]
+            for peak, name in zip(current_peaks, names):
+                peak.name = name
+            return current_peaks
+    except TypeError:
+        pass
+
     for peak in all_peaks:
         # add new peak if it doesn't exist yet
         if peak.name not in names:
             current_peaks.append(peak)
         else:
+            # remove any current peaks that have been deleted
+            current_peaks = [c for c in current_peaks if c.name in [a.name for a in all_peaks]]
             # just update values if it already exists
             # make sure not to overwrite any existing calibration data
             for curr in current_peaks:
                 if curr.name == peak.name:
                     curr.name = peak.name
                     curr.x = x
-                    curr.y = curr.create_peak()
                     curr.height = peak.height
                     curr.center = peak.center
                     curr.width = peak.width
                     curr.skew = peak.skew
+                    curr.y = curr.create_peak()
 
     return current_peaks
 
@@ -225,7 +237,7 @@ def update_fig(
         # otherwise it will be overwritten with a new instance
         peak_list = update_peaks(peak_data, x, names, heights, centers, widths, skew_factor)
     else:
-        peak_list = [Compound(peak[0], x, peak[1], peak[2], peak[3], peak[4]) for peak in zip(names, heights, centers, widths, skew_factor)]
+        peak_list = [Compound(peak[0], x, peak[2], peak[3], peak[4], peak[5]) for peak in zip(names, heights, centers, widths, skew_factor)]
 
     y = calc_y(peak_list)
 
