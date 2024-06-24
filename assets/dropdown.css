@@ -1,0 +1,13 @@
+#peak-calibration-selection .Select-control {
+    background-color: rgb(40, 40, 40) !important;
+    color:white;
+  }
+  
+#peak-calibration-selection .Select-menu-outer {
+    background-color: rgb(65, 65, 65);
+    color: white;
+}
+
+#peak-calibration-selection .Select-value-label {
+    color: white !important;
+}

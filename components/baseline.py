@@ -67,14 +67,14 @@ bleed_options = dmc.Accordion(
                             html.Div(
                                 [
                                     html.P("Bleed X Start:", style={"margin-top": 10}),
-                                    dbc.Input(type="number", value=1000, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "bleed-start", "index": 1})
+                                    dbc.Input(type="number", value=12, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "bleed-start", "index": 1})
                                 ],
                                 className="accordian-options"
                             ),
                             html.Div(
                                 [
                                     html.P("Bleed X Stop:", style={"margin-top": 10}),
-                                    dbc.Input(type="number", value=1000, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "bleed-stop", "index": 1})
+                                    dbc.Input(type="number", value=15, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "bleed-stop", "index": 1})
                                 ],
                                 className="accordian-options"
                             ),
@@ -134,14 +134,14 @@ def trendline_options(n_clicks):
                             html.Div(
                                 [
                                     html.P("Trendline X Start:", style={"margin-top": 10}),
-                                    dbc.Input(type="number", value=0, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "baseline-start", "index": n_clicks})
+                                    dbc.Input(type="number", value=12, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "baseline-start", "index": n_clicks})
                                 ],
                                 className="accordian-options"
                             ),
                             html.Div(
                                 [
                                     html.P("Trendline X Stop:", style={"margin-top": 10}),
-                                    dbc.Input(type="number", value=0, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "baseline-stop", "index": n_clicks})
+                                    dbc.Input(type="number", value=15, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id={"type": "baseline-stop", "index": n_clicks})
                                 ],
                                 className="accordian-options"
                             ),

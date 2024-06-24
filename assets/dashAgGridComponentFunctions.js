@@ -33,3 +33,25 @@ dagcomponentfuncs.Checkbox = function (props) {
         })
     );
 };
+
+
+dagcomponentfuncs.deleteCal = function (props) {
+    const {setData, data} = props;
+
+    function onClick() {
+        setData(props.value)
+    }
+
+    let iconify = React.createElement(window.dash_iconify.DashIconify, {icon: props.icon});
+
+    return React.createElement(
+        window.dash_mantine_components.Button,
+        {
+            onClick,
+            variant: props.variant,
+            color: props.color,
+            iconify,
+        },
+        props.value
+    );
+};

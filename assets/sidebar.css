@@ -18,11 +18,16 @@
   width: 25rem;
 }
 
+/* sidebar loses hover when dragging an ag grid row
+make sure sidebar is still visible while dragging */
+.sidebar:has(.ag-row-dragging) {
+  width: 25rem;
+}
+
 /* make sure the contents of the navlink don't wrap when navbar collapses */
 .sidebar .nav {
   width: 100%;
   max-width: 100%;
-  /* overflow: hidden; */
   white-space: nowrap;
   display: flex;
   padding-right: 1rem;
@@ -50,6 +55,14 @@
   color: black;
 }
 
+/* sidebar loses hover when dragging an ag grid row
+make sure nav items display while dragging */
+.sidebar:has(.ag-row-dragging) .nav {
+  visibility: visible;
+  opacity: 1;
+  color: black;
+}
+
 /* container for the sidebar header. make sure the contents don't wrap when
    * the sidebar is collapsed.
    */
@@ -57,7 +70,6 @@
   display: flex;
   justify-content: left;
   align-items: center;
-  /* overflow: hidden; */
   white-space: nowrap;
 }
 
@@ -75,6 +87,13 @@
   font-size: large;
 }
 
+/* sidebar loses hover when dragging an ag grid row
+make sure header displays while dragging */
+.sidebar:has(.ag-row-dragging) .sidebar-header span {
+  opacity: 1;
+  font-size: large;
+}
+
 /* position the content relative to the collapsed sidebar */
 .content {
   margin-left: 7rem;
@@ -83,6 +102,13 @@
   margin-top: 1rem;
 }
 
-.sidebar:hover+.content {
+/* shift content when sidebar is displayed */
+.sidebar:hover + .content {
+  margin-left: 23rem;
+}
+
+/* sidebar loses hover when dragging an ag grid row
+make sure content stays shifted while dragging */
+.sidebar:has(.ag-row-dragging) + .content {
   margin-left: 23rem;
 }

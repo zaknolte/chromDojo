@@ -51,9 +51,7 @@ annotations_accordian = dmc.Accordion(
                                 "domLayout": "autoHeight",
                                 "animateRows": True,
                                 "rowDragManaged": True,
-                                "suppressCellFocus": True
                                 },
-                            # columnSize="sizeToFit",
                             style={"width": 300, "height": None},
                             className="ag-theme-balham-dark"
                         )
