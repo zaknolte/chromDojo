@@ -328,11 +328,11 @@ def update_calibrators(new_data, row_data, regression_type, weighting, unit_upda
             # build curves
             if regression_type == "linear":
                 coefs = np.polyfit(x, y, 1)
-                # add additional points to plot a smoother curve
-                x = np.linspace(np.min(x_total), np.max(x_total), 20)
                 r2 = get_r_squared(coefs)
+                # add additional points to plot a smoother curve
+                x_fit = np.linspace(np.min(x_total), np.max(x_total), 20)
 
-                y_fit = coefs[0] * x + coefs[1]
+                y_fit = coefs[0] * x_fit + coefs[1]
 
                 const_sign = "+" if coefs[1] > 0 else ""
 
@@ -342,8 +342,8 @@ def update_calibrators(new_data, row_data, regression_type, weighting, unit_upda
                 coefs = np.polyfit(x, y, 2)
                 r2 = get_r_squared(coefs)
                 # add additional points to plot a smoother curve
-                x = np.linspace(np.min(x_total), np.max(x_total), 20)
-                y_fit = (coefs[0] * x * x) + (coefs[1] * x) + coefs[2]
+                x_fit = np.linspace(np.min(x_total), np.max(x_total), 20)
+                y_fit = (coefs[0] * x_fit * x_fit) + (coefs[1] * x_fit) + coefs[2]
 
                 slope_sign = "+" if coefs[1] > 0 else ""
                 const_sign = "+" if coefs[2] > 0 else ""
@@ -355,9 +355,8 @@ def update_calibrators(new_data, row_data, regression_type, weighting, unit_upda
                     pass 
                 coefs = np.linalg.lstsq(np.asarray(x).reshape(-1,1), y)[0]
                 # add additional points to plot a smoother curve
-                x = np.linspace(np.min(x_total), np.max(x_total), 20)
-                r2 = get_r_squared(coefs)
-                y_fit = x * coefs[0]
+                x_fit = np.linspace(np.min(x_total), np.max(x_total), 20)
+                y_fit = x_fit * coefs[0]
 
                 text += f"{coefs[0]:.4g}x"
             
@@ -384,7 +383,7 @@ def update_calibrators(new_data, row_data, regression_type, weighting, unit_upda
 
             traces.append(
                 go.Scatter(
-                    x=x,
+                    x=x_fit,
                     y=y_fit,
                     mode="lines",
                     marker={"color": "darkgrey"},
