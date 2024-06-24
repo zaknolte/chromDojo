@@ -111,10 +111,10 @@ calibration_panel = dmc.TabsPanel(
                                 value="none",
                                 data=[
                                     {"value": "none", "label": "None"},
-                                    {"value": "1x", "label": "1/x"},
-                                    {"value": "1x2", "label": "1/x^2"},
-                                    {"value": "1y", "label": "1/y"},
-                                    {"value": "1y2", "label": "1/y^2"},
+                                    # {"value": "1x", "label": "1/x"},
+                                    # {"value": "1x2", "label": "1/x^2"},
+                                    # {"value": "1y", "label": "1/y"},
+                                    # {"value": "1y2", "label": "1/y^2"},
                                 ],
                             ),
                         ],
@@ -239,11 +239,12 @@ def add_calibrator(n_clicks, compound, peak_data):
     Input("calibration-table", "cellRendererData"),
     Input("regression-select", "value"),
     Input("weight-select", "value"),
+    Input("results-table", "cellValueChanged"),
     State("peak-calibration-selection", "value"),
     State("x-y-data", "data"),
     prevent_initial_call=True,
 )
-def update_calibrators(new_data, row_data, regression_type, weighting, compound, peak_data):
+def update_calibrators(new_data, row_data, regression_type, weighting, unit_update, compound, peak_data):
     def get_r_squared(coefs):
         fit = np.poly1d(coefs)
         yhat = fit(x)
@@ -279,6 +280,7 @@ def update_calibrators(new_data, row_data, regression_type, weighting, compound,
         if peak.name == compound:
             traces = []
             x = []
+            x_total = []
             y = []
             # build cal points
             for cal in peak.calibration.points:
@@ -305,6 +307,7 @@ def update_calibrators(new_data, row_data, regression_type, weighting, compound,
                         },
                         "color": "rgb(50, 50, 50)"
                     }
+                x_total.append(cal.x)
 
                 traces.append(go.Scatter(x=[cal.x], y=[cal.y], mode="markers", marker=marker))
 
@@ -326,7 +329,7 @@ def update_calibrators(new_data, row_data, regression_type, weighting, compound,
             if regression_type == "linear":
                 coefs = np.polyfit(x, y, 1)
                 # add additional points to plot a smoother curve
-                x = np.linspace(np.min(x), np.max(x), 20)
+                x = np.linspace(np.min(x_total), np.max(x_total), 20)
                 r2 = get_r_squared(coefs)
 
                 y_fit = coefs[0] * x + coefs[1]
@@ -339,7 +342,7 @@ def update_calibrators(new_data, row_data, regression_type, weighting, compound,
                 coefs = np.polyfit(x, y, 2)
                 r2 = get_r_squared(coefs)
                 # add additional points to plot a smoother curve
-                x = np.linspace(np.min(x), np.max(x), 20)
+                x = np.linspace(np.min(x_total), np.max(x_total), 20)
                 y_fit = (coefs[0] * x * x) + (coefs[1] * x) + coefs[2]
 
                 slope_sign = "+" if coefs[1] > 0 else ""
@@ -352,7 +355,7 @@ def update_calibrators(new_data, row_data, regression_type, weighting, compound,
                     pass 
                 coefs = np.linalg.lstsq(np.asarray(x).reshape(-1,1), y)[0]
                 # add additional points to plot a smoother curve
-                x = np.linspace(np.min(x), np.max(x), 20)
+                x = np.linspace(np.min(x_total), np.max(x_total), 20)
                 r2 = get_r_squared(coefs)
                 y_fit = x * coefs[0]
 
