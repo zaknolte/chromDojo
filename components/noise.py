@@ -21,9 +21,9 @@ noise_accordian = dmc.Accordion(
                     html.Div(
                         [
                             html.P("Noise Factor:", style={"margin-top": 10}),
-                            dbc.Input(type="number", value=0, placeholder=0, min=0, style={"width": 100, "margin-left": 20}, className="sidebar-input", id="add-noise")
+                            dbc.Input(type="number", value=0, placeholder=0, min=0, style={"width": 100, "margin-left": 20}, className="annotation-options", id="add-noise")
                         ],
-                        style={"display": "flex", "justify-content": "center", "align-items": "center"}
+                        className="accordian-options"
                     ),
                 ),
             ],
