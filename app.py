@@ -23,6 +23,20 @@ app.layout = dmc.MantineProvider(
             sidebar,
             html.Div(
                 [
+                    dbc.Modal(
+                        [
+                            dbc.ModalHeader(dbc.ModalTitle("Welcome to Chrom-Dojo!")),
+                            dbc.ModalBody(
+                                """To begin building your own chromatograms, hover over the options sidebar on the left to display peak options.\n
+                                \nAdd as many peaks as you want with the '+ Add Peak" button and begin customizing peak shape, noise, and baseline.\n
+                                \nIf you want to test quantitative data, you can adjust integration parameters as well as create custom calibration curves in the table below!
+                                """
+                            ),
+                            dbc.ModalFooter("Have fun!")
+                        ],
+                        id="modal",
+                        is_open=True,
+                    ),
                     graph,
                     data_tab,
                     dcc.Store(id="x-y-data", data=None), # hold major updates to peak data

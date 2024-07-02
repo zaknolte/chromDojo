@@ -1,0 +1,4 @@
+/* needed to recognize line breaks */
+.modal {
+    white-space: pre-line;
+}
